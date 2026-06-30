@@ -63,6 +63,18 @@
                     </a>
                 @endcan
 
+                {{-- Themes --}}
+                @can(\App\Enums\Permission::ThemesManage->value)
+                    <a href="{{ route('admin.themes.settings') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.themes.*'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.themes.*'),
+                       ])>
+                        <span class="font-display">Theme Settings</span>
+                    </a>
+                @endcan
+
                 {{-- Ecommerce nav (visible only when the toggle is on) --}}
                 @if(\App\Support\Feature::ecommerce())
                     <a href="{{ route('admin.shop.products') }}"

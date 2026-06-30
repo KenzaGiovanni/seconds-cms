@@ -28,6 +28,12 @@ class PageForm extends Component
     public ?int $featuredImageId = null;
     public ?string $featuredImageUrl = null;
 
+    /** @var list<array{type: string, data: array<string, mixed>}> */
+    public array $blocks = [];
+
+    // New block form
+    public string $newBlockType = 'paragraph';
+
     public function mount(?int $id = null): void
     {
         abort_unless(auth()->user()->can(Permission::ContentManage->value), 403);
@@ -45,6 +51,7 @@ class PageForm extends Component
             $this->slugManuallyEdited = true;
             $this->featuredImageId = $page->featured_image_id;
             $this->featuredImageUrl = $page->featuredImage?->url();
+            $this->blocks = $page->blocks ?? [];
         }
     }
 
@@ -71,6 +78,41 @@ class PageForm extends Component
     {
         $this->featuredImageId = null;
         $this->featuredImageUrl = null;
+    }
+
+    public function addBlock(): void
+    {
+        $this->blocks[] = $this->defaultBlock($this->newBlockType);
+    }
+
+    public function removeBlock(int $index): void
+    {
+        array_splice($this->blocks, $index, 1);
+        $this->blocks = array_values($this->blocks);
+    }
+
+    public function moveBlockUp(int $index): void
+    {
+        if ($index === 0) {
+            return;
+        }
+        [$this->blocks[$index - 1], $this->blocks[$index]] = [$this->blocks[$index], $this->blocks[$index - 1]];
+    }
+
+    public function moveBlockDown(int $index): void
+    {
+        if ($index >= count($this->blocks) - 1) {
+            return;
+        }
+        [$this->blocks[$index], $this->blocks[$index + 1]] = [$this->blocks[$index + 1], $this->blocks[$index]];
+    }
+
+    private function defaultBlock(string $type): array
+    {
+        return match ($type) {
+            'heading' => ['type' => 'heading', 'data' => ['level' => 2, 'text' => '']],
+            default => ['type' => 'paragraph', 'data' => ['text' => '']],
+        };
     }
 
     public function save(): void
@@ -100,12 +142,14 @@ class PageForm extends Component
             'publishedAt' => 'nullable|date',
             'metaTitle' => 'nullable|string|max:255',
             'metaDescription' => 'nullable|string|max:500',
+            'blocks' => 'nullable|array',
         ]);
 
         $payload = [
             'title' => $data['title'],
             'slug' => $data['slug'],
             'body' => $data['body'] ?? null,
+            'blocks' => count($this->blocks) ? $this->blocks : null,
             'status' => $data['status'],
             'published_at' => $data['publishedAt'] ? now()->parse($data['publishedAt']) : null,
             'meta_title' => $data['metaTitle'] ?: null,

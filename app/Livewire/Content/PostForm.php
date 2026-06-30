@@ -38,6 +38,11 @@ class PostForm extends Component
     public ?int $featuredImageId = null;
     public ?string $featuredImageUrl = null;
 
+    /** @var list<array{type: string, data: array<string, mixed>}> */
+    public array $blocks = [];
+
+    public string $newBlockType = 'paragraph';
+
     public function mount(?int $id = null): void
     {
         abort_unless(auth()->user()->can(Permission::ContentManage->value), 403);
@@ -58,6 +63,7 @@ class PostForm extends Component
             $this->slugManuallyEdited = true;
             $this->featuredImageId = $post->featured_image_id;
             $this->featuredImageUrl = $post->featuredImage?->url();
+            $this->blocks = $post->blocks ?? [];
         }
     }
 
@@ -84,6 +90,41 @@ class PostForm extends Component
     {
         $this->featuredImageId = null;
         $this->featuredImageUrl = null;
+    }
+
+    public function addBlock(): void
+    {
+        $this->blocks[] = $this->defaultBlock($this->newBlockType);
+    }
+
+    public function removeBlock(int $index): void
+    {
+        array_splice($this->blocks, $index, 1);
+        $this->blocks = array_values($this->blocks);
+    }
+
+    public function moveBlockUp(int $index): void
+    {
+        if ($index === 0) {
+            return;
+        }
+        [$this->blocks[$index - 1], $this->blocks[$index]] = [$this->blocks[$index], $this->blocks[$index - 1]];
+    }
+
+    public function moveBlockDown(int $index): void
+    {
+        if ($index >= count($this->blocks) - 1) {
+            return;
+        }
+        [$this->blocks[$index], $this->blocks[$index + 1]] = [$this->blocks[$index + 1], $this->blocks[$index]];
+    }
+
+    private function defaultBlock(string $type): array
+    {
+        return match ($type) {
+            'heading' => ['type' => 'heading', 'data' => ['level' => 2, 'text' => '']],
+            default => ['type' => 'paragraph', 'data' => ['text' => '']],
+        };
     }
 
     public function save(): void
@@ -116,6 +157,7 @@ class PostForm extends Component
             'metaDescription' => 'nullable|string|max:500',
             'selectedCategories' => 'nullable|array',
             'selectedCategories.*' => 'integer|exists:categories,id',
+            'blocks' => 'nullable|array',
         ]);
 
         $payload = [
@@ -127,6 +169,7 @@ class PostForm extends Component
             'published_at' => $data['publishedAt'] ? now()->parse($data['publishedAt']) : null,
             'meta_title' => $data['metaTitle'] ?: null,
             'meta_description' => $data['metaDescription'] ?: null,
+            'blocks' => count($this->blocks) ? $this->blocks : null,
             'featured_image_id' => $this->featuredImageId,
             'author_id' => auth()->id(),
         ];
