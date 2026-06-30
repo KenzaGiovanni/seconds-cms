@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FrontController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
 use App\Livewire\Install\Installer;
@@ -7,9 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Front-end home (rendered through the active theme).
+Route::get('/', [FrontController::class, 'home'])->name('home');
 
 // Lightweight health check — confirms the app boots and can answer.
 Route::get('/health', function () {
@@ -46,3 +46,9 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
         Route::get('/orders', fn () => response()->json(['module' => 'orders']))->name('orders');
     });
 });
+
+// Front-end content catch-all (MUST stay last). Single-segment slugs only, so it
+// never shadows /admin/*, /install, etc. Resolves published pages + posts by slug.
+Route::get('/{slug}', [FrontController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
+    ->name('content.show');

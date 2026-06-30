@@ -1,8 +1,14 @@
-{{-- Default theme: home page --}}
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><title>{{ config('app.name') }}</title></head>
-<body>
+@extends('theme::layout', ['title' => config('app.name')])
+
+@section('content')
     <h1>Welcome to {{ config('app.name') }}</h1>
-</body>
-</html>
+
+    @if($posts->isNotEmpty())
+        <h2>Latest posts</h2>
+        <ul>
+            @foreach($posts as $post)
+                <li><a href="/{{ $post->slug }}">{{ $post->title }}</a></li>
+            @endforeach
+        </ul>
+    @endif
+@endsection

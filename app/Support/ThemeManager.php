@@ -22,27 +22,28 @@ class ThemeManager
     }
 
     /**
-     * Register the active theme's Blade view namespace so storefront templates
-     * resolve from themes/<slug>/views, with fallback to themes/default/views.
+     * Register the `theme::` Blade namespace. The default theme is always
+     * registered as the base/fallback (there is always a theme), and the active
+     * theme is prepended so its templates override the default.
      */
     public function boot(): void
     {
+        // Base/fallback: the default theme is always available.
+        $defaultPath = $this->themesPath('default').'/views';
+
+        if (is_dir($defaultPath)) {
+            View::addNamespace('theme', $defaultPath);
+        }
+
+        // Active theme overrides the default (skip if it *is* the default).
         $active = $this->active();
 
-        if (! $active) {
-            return;
-        }
+        if ($active && $active->slug !== 'default') {
+            $activePath = $this->themesPath($active->slug).'/views';
 
-        $viewPath = $this->themesPath($active->slug).'/views';
-
-        if (is_dir($viewPath)) {
-            View::prependNamespace('theme', $viewPath);
-        }
-
-        $fallbackPath = $this->themesPath('default').'/views';
-
-        if (is_dir($fallbackPath)) {
-            View::addNamespace('theme', $fallbackPath);
+            if (is_dir($activePath)) {
+                View::prependNamespace('theme', $activePath);
+            }
         }
     }
 
