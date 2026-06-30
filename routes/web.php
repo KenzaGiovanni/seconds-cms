@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FormController;
 use App\Http\Controllers\FrontController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Content\PageForm;
@@ -10,12 +11,14 @@ use App\Livewire\Dashboard;
 use App\Livewire\Forms\FormBuilder;
 use App\Livewire\Forms\FormList;
 use App\Livewire\Forms\FormSubmissions;
+use App\Livewire\Install\Installer;
 use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
 use App\Livewire\Themes\ThemeAdmin;
 use App\Livewire\Themes\ThemeSettings as ThemeSettingsAdmin;
-use App\Livewire\Install\Installer;
+use App\Models\Page;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -33,17 +36,22 @@ Route::get('/tag/{slug}', [FrontController::class, 'tag'])
     ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
     ->name('tag.show');
 
+// Public form submission endpoint.
+Route::post('/forms/{slug}', [FormController::class, 'submit'])
+    ->where('slug', '[a-z0-9][a-z0-9\-]*')
+    ->name('forms.submit');
+
 // SEO: sitemap + robots (before the catch-all).
 Route::get('/sitemap.xml', function () {
-    $pages = \App\Models\Page::published()->orderBy('updated_at', 'desc')->get();
-    $posts = \App\Models\Post::published()->orderBy('updated_at', 'desc')->get();
+    $pages = Page::published()->orderBy('updated_at', 'desc')->get();
+    $posts = Post::published()->orderBy('updated_at', 'desc')->get();
 
     return response()->view('sitemap', compact('pages', 'posts'))
         ->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
 Route::get('/robots.txt', function () {
-    return response("User-agent: *\nAllow: /\nSitemap: " . url('/sitemap.xml') . "\n")
+    return response("User-agent: *\nAllow: /\nSitemap: ".url('/sitemap.xml')."\n")
         ->header('Content-Type', 'text/plain');
 })->name('robots');
 

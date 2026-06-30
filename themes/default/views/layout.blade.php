@@ -448,6 +448,74 @@
             text-decoration: none;
         }
         .footer-nav a:hover { color: var(--ink); }
+
+        /* --- Forms --- */
+        .seconds-form { max-width: 540px; }
+        .seconds-form-hp { position: absolute !important; left: -9999px !important; height: 0; overflow: hidden; }
+        .seconds-form-field { margin-bottom: 1.25rem; }
+        .seconds-form-field > label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--ink);
+            margin-bottom: 0.375rem;
+        }
+        .seconds-form-field .req { color: var(--accent); }
+        .seconds-form input[type="text"],
+        .seconds-form input[type="email"],
+        .seconds-form input[type="number"],
+        .seconds-form textarea,
+        .seconds-form select {
+            width: 100%;
+            font: inherit;
+            font-size: 0.9375rem;
+            color: var(--ink);
+            background: var(--soft);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-btn);
+            padding: 0.625rem 0.75rem;
+        }
+        .seconds-form input:focus,
+        .seconds-form textarea:focus,
+        .seconds-form select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+        .seconds-form-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 400;
+        }
+        .seconds-form-check input { width: auto; }
+        .seconds-form-error {
+            margin-top: 0.375rem;
+            font-size: 0.8125rem;
+            color: #b91c1c;
+        }
+        .seconds-form-success {
+            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-btn);
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+            color: var(--accent);
+            font-size: 0.9375rem;
+        }
+        .seconds-form-submit {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-btn);
+            padding: 0.625rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .seconds-form-submit:hover { background: var(--accent2); }
     </style>
 </head>
 <body>

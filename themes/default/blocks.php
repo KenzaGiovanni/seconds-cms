@@ -51,6 +51,14 @@ return [
         ],
     ],
 
+    'form' => [
+        'label' => 'Form',
+        'fields' => [
+            ['key' => 'slug', 'type' => 'text', 'label' => 'Form slug',
+                'help' => 'The slug of the form to embed (see Forms).'],
+        ],
+    ],
+
     'divider' => [
         'label' => 'Divider',
         'fields' => [],

@@ -37,5 +37,10 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('menu', function (string $expression) {
             return "<?php echo view('theme::partials.menu', ['menu' => \App\Models\Menu::forLocation({$expression})])->render(); ?>";
         });
+
+        // @form('slug') — renders a form by slug through the active theme.
+        Blade::directive('form', function (string $expression) {
+            return "<?php echo \App\Support\FormRenderer::render({$expression}); ?>";
+        });
     }
 }
