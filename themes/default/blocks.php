@@ -8,13 +8,20 @@
  * at `views/blocks/<type>.blade.php` renders the stored data on the front-end.
  *
  * Field types: text, textarea, richtext, image, number, toggle, select, repeater.
- * A `repeater` carries nested `fields` (e.g. the services grid's cards).
+ * A `repeater` carries nested `fields` (e.g. the feature grid's cards).
  *
  * This file is the reference for theme authors: to add a block, declare it here
  * and ship a partial of the same name.
  */
 
 return [
+    'paragraph' => [
+        'label' => 'Paragraph',
+        'fields' => [
+            ['key' => 'text', 'type' => 'textarea', 'label' => 'Text'],
+        ],
+    ],
+
     'heading' => [
         'label' => 'Heading',
         'fields' => [
@@ -24,19 +31,23 @@ return [
         ],
     ],
 
-    'paragraph' => [
-        'label' => 'Paragraph',
-        'fields' => [
-            ['key' => 'text', 'type' => 'textarea', 'label' => 'Text'],
-        ],
-    ],
-
     'image' => [
         'label' => 'Image',
         'fields' => [
             ['key' => 'url', 'type' => 'image', 'label' => 'Image'],
             ['key' => 'alt', 'type' => 'text', 'label' => 'Alt text'],
             ['key' => 'caption', 'type' => 'text', 'label' => 'Caption'],
+        ],
+    ],
+
+    'features' => [
+        'label' => 'Feature grid',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => 'Section heading'],
+            ['key' => 'items', 'type' => 'repeater', 'label' => 'Features', 'fields' => [
+                ['key' => 'title', 'type' => 'text', 'label' => 'Title'],
+                ['key' => 'text', 'type' => 'textarea', 'label' => 'Description'],
+            ]],
         ],
     ],
 

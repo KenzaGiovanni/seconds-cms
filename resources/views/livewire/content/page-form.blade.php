@@ -62,59 +62,8 @@
                 @error('body') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Content blocks --}}
-            <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">
-                <h2 class="font-display text-sm font-semibold text-ink">Content blocks</h2>
-
-                @if(count($blocks))
-                    <div class="space-y-3">
-                        @foreach($blocks as $i => $block)
-                            <div wire:key="block-{{ $i }}" class="rounded border border-line bg-soft p-3 space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-medium text-muted uppercase">{{ $block['type'] }}</span>
-                                    <div class="flex gap-1">
-                                        <button type="button" wire:click="moveBlockUp({{ $i }})"
-                                                class="rounded px-1 py-0.5 text-xs text-muted hover:text-ink">&uarr;</button>
-                                        <button type="button" wire:click="moveBlockDown({{ $i }})"
-                                                class="rounded px-1 py-0.5 text-xs text-muted hover:text-ink">&darr;</button>
-                                        <button type="button" wire:click="removeBlock({{ $i }})"
-                                                class="rounded px-1 py-0.5 text-xs text-red-500 hover:text-red-700">Remove</button>
-                                    </div>
-                                </div>
-                                @if($block['type'] === 'heading')
-                                    <div class="flex gap-2">
-                                        <select wire:model="blocks.{{ $i }}.data.level"
-                                                class="w-16 rounded border border-line bg-bg px-2 py-1 text-xs text-ink focus:border-accent focus:outline-none">
-                                            @foreach([1,2,3,4,5,6] as $lvl)
-                                                <option value="{{ $lvl }}">H{{ $lvl }}</option>
-                                            @endforeach
-                                        </select>
-                                        <input wire:model="blocks.{{ $i }}.data.text" type="text" placeholder="Heading text"
-                                               class="flex-1 rounded border border-line bg-bg px-2 py-1 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none" />
-                                    </div>
-                                @elseif($block['type'] === 'paragraph')
-                                    <textarea wire:model="blocks.{{ $i }}.data.text" rows="3" placeholder="Paragraph text"
-                                              class="w-full rounded border border-line bg-bg px-2 py-1 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none"></textarea>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-xs text-muted">No blocks yet. Add one below.</p>
-                @endif
-
-                <div class="flex items-center gap-2">
-                    <select wire:model="newBlockType"
-                            class="rounded-[var(--radius-btn)] border border-line bg-soft px-3 py-1.5 text-sm text-ink focus:border-accent focus:outline-none">
-                        <option value="paragraph">Paragraph</option>
-                        <option value="heading">Heading</option>
-                    </select>
-                    <button type="button" wire:click="addBlock"
-                            class="rounded-[var(--radius-btn)] border border-accent px-3 py-1.5 font-display text-xs font-medium text-accent transition hover:bg-accent/5">
-                        + Add block
-                    </button>
-                </div>
-            </div>
+            {{-- Content blocks (schema-driven from the active theme) --}}
+            @include('livewire.content.partials.block-editor')
 
             {{-- SEO --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">

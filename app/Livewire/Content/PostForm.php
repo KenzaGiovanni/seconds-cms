@@ -4,29 +4,39 @@ namespace App\Livewire\Content;
 
 use App\Enums\ContentStatus;
 use App\Enums\Permission;
+use App\Livewire\Concerns\WithBlockEditor;
 use App\Models\Category;
 use App\Models\Content;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Support\Str;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('layouts.admin')]
 class PostForm extends Component
 {
+    use WithBlockEditor;
+
     public ?int $postId = null;
 
     public string $title = '';
+
     public string $slug = '';
+
     public string $body = '';
+
     public string $excerpt = '';
+
     public string $status = 'draft';
+
     public string $publishedAt = '';
+
     public string $metaTitle = '';
+
     public string $metaDescription = '';
+
     public bool $slugManuallyEdited = false;
 
     /** @var list<int> */
@@ -36,12 +46,8 @@ class PostForm extends Component
     public string $tagInput = '';
 
     public ?int $featuredImageId = null;
+
     public ?string $featuredImageUrl = null;
-
-    /** @var list<array{type: string, data: array<string, mixed>}> */
-    public array $blocks = [];
-
-    public string $newBlockType = 'paragraph';
 
     public function mount(?int $id = null): void
     {
@@ -82,6 +88,11 @@ class PostForm extends Component
     #[On('media-selected')]
     public function onMediaSelected(int $id, string $url): void
     {
+        // Block image fields claim the pick first; otherwise it's the featured image.
+        if ($this->applyBlockMedia($id, $url)) {
+            return;
+        }
+
         $this->featuredImageId = $id;
         $this->featuredImageUrl = $url;
     }
@@ -90,41 +101,6 @@ class PostForm extends Component
     {
         $this->featuredImageId = null;
         $this->featuredImageUrl = null;
-    }
-
-    public function addBlock(): void
-    {
-        $this->blocks[] = $this->defaultBlock($this->newBlockType);
-    }
-
-    public function removeBlock(int $index): void
-    {
-        array_splice($this->blocks, $index, 1);
-        $this->blocks = array_values($this->blocks);
-    }
-
-    public function moveBlockUp(int $index): void
-    {
-        if ($index === 0) {
-            return;
-        }
-        [$this->blocks[$index - 1], $this->blocks[$index]] = [$this->blocks[$index], $this->blocks[$index - 1]];
-    }
-
-    public function moveBlockDown(int $index): void
-    {
-        if ($index >= count($this->blocks) - 1) {
-            return;
-        }
-        [$this->blocks[$index], $this->blocks[$index + 1]] = [$this->blocks[$index + 1], $this->blocks[$index]];
-    }
-
-    private function defaultBlock(string $type): array
-    {
-        return match ($type) {
-            'heading' => ['type' => 'heading', 'data' => ['level' => 2, 'text' => '']],
-            default => ['type' => 'paragraph', 'data' => ['text' => '']],
-        };
     }
 
     public function save(): void
