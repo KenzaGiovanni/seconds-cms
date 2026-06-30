@@ -1,16 +1,25 @@
 @extends('theme::layout', [
-    'title' => $content->meta_title ?: $content->title,
-    'description' => $content->meta_description,
+    'title' => $seo['title'] ?? ($content->meta_title ?: $content->title . ' - ' . config('app.name')),
 ])
 
 @section('content')
-    <article>
-        <h1>{{ $content->title }}</h1>
+    <div class="article-wrap">
+        <header class="article-header">
+            <h1>{{ $content->title }}</h1>
+        </header>
 
-        {!! $renderedBlocks !!}
-
-        @if($content->body)
-            <div class="body">{!! $content->body !!}</div>
+        @if($content->featuredImage)
+            <div class="article-featured-image">
+                <img src="{{ $content->featuredImage->url() }}"
+                     alt="{{ $content->featuredImage->alt ?: $content->title }}">
+            </div>
         @endif
-    </article>
+
+        <div class="article-body">
+            {!! $renderedBlocks !!}
+            @if($content->body)
+                {!! $content->body !!}
+            @endif
+        </div>
+    </div>
 @endsection

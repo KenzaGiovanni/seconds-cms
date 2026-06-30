@@ -3,11 +3,14 @@
     "name": "Seconds Default",
     "version": "1.0.0",
     "author": "&Now",
-    "screenshot": null,
+    "screenshot": "screenshot.png",
     "supports": ["content", "ecommerce"],
     "locations": ["primary", "footer"],
     "settings": {
         "primary_color": "#16513F",
-        "show_hero": true
+        "show_hero": true,
+        "hero_heading": "Welcome.",
+        "hero_subheading": "A clean space for ideas, stories, and things worth sharing.",
+        "footer_text": ""
     }
 }
