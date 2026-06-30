@@ -26,6 +26,19 @@
                    ])>
                     <span class="font-display">Dashboard</span>
                 </a>
+
+                {{-- Content --}}
+                @can(\App\Enums\Permission::ContentManage->value)
+                    <a href="{{ route('admin.pages.index') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.pages.*'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.pages.*'),
+                       ])>
+                        <span class="font-display">Pages</span>
+                    </a>
+                @endcan
+
                 {{-- Ecommerce nav (visible only when the toggle is on) --}}
                 @if(\App\Support\Feature::ecommerce())
                     <a href="{{ route('admin.shop.products') }}"

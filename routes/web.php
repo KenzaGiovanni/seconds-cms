@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\FrontController;
 use App\Livewire\Auth\Login;
+use App\Livewire\Content\PageForm;
+use App\Livewire\Content\PageList;
 use App\Livewire\Dashboard;
 use App\Livewire\Install\Installer;
 use Illuminate\Http\Request;
@@ -39,6 +41,13 @@ Route::post('/logout', function (Request $request) {
 // Admin area (auth + staff-role gated).
 Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
     Route::get('/', Dashboard::class)->name('admin.dashboard');
+
+    // Content: Pages
+    Route::prefix('pages')->name('admin.pages.')->group(function () {
+        Route::get('/', PageList::class)->name('index');
+        Route::get('/create', PageForm::class)->name('create');
+        Route::get('/{id}/edit', PageForm::class)->name('edit');
+    });
 
     // Ecommerce module — gated by the `ecommerce` feature toggle.
     Route::middleware('ecommerce')->prefix('shop')->name('admin.shop.')->group(function () {
