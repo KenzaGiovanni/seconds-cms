@@ -1,6 +1,6 @@
 <div>
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="font-display text-2xl font-bold text-ink">Posts</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">Posts</h1>
         <a href="{{ route('admin.posts.create') }}"
            wire:navigate
            class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:bg-accent/90">

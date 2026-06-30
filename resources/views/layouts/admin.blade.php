@@ -17,89 +17,63 @@
                     Seconds<span class="text-accent">.</span>
                 </a>
             </div>
-            <nav class="flex-1 space-y-1 px-3 py-2">
+            @php
+                $navItem = 'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition font-display';
+                $navIdle = 'text-muted hover:bg-soft hover:text-ink';
+                $navActive = 'bg-accent/10 text-accent';
+                $sectionLabel = 'px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted/70 font-display';
+            @endphp
+            <nav class="flex-1 space-y-0.5 px-3 py-3">
+                {{-- Overview --}}
                 <a href="{{ route('admin.dashboard') }}"
-                   @class([
-                       'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                       'bg-accent/10 text-accent' => request()->routeIs('admin.dashboard'),
-                       'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.dashboard'),
-                   ])>
-                    <span class="font-display">Dashboard</span>
+                   @class([$navItem, $navActive => request()->routeIs('admin.dashboard'), $navIdle => ! request()->routeIs('admin.dashboard')])>
+                    Dashboard
                 </a>
 
                 {{-- Content --}}
                 @can(\App\Enums\Permission::ContentManage->value)
+                    <p class="{{ $sectionLabel }} mt-4">Content</p>
                     <a href="{{ route('admin.pages.index') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.pages.*'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.pages.*'),
-                       ])>
-                        <span class="font-display">Pages</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.pages.*'), $navIdle => ! request()->routeIs('admin.pages.*')])>
+                        Pages
                     </a>
                     <a href="{{ route('admin.posts.index') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.posts.*'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.posts.*'),
-                       ])>
-                        <span class="font-display">Posts</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.posts.*'), $navIdle => ! request()->routeIs('admin.posts.*')])>
+                        Posts
                     </a>
                     <a href="{{ route('admin.media.index') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.media.*'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.media.*'),
-                       ])>
-                        <span class="font-display">Media</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.media.*'), $navIdle => ! request()->routeIs('admin.media.*')])>
+                        Media
                     </a>
                     <a href="{{ route('admin.menus.index') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.menus.*'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.menus.*'),
-                       ])>
-                        <span class="font-display">Menus</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.menus.*'), $navIdle => ! request()->routeIs('admin.menus.*')])>
+                        Menus
                     </a>
                 @endcan
 
-                {{-- Themes --}}
+                {{-- Appearance --}}
                 @can(\App\Enums\Permission::ThemesManage->value)
+                    <p class="{{ $sectionLabel }} mt-4">Appearance</p>
                     <a href="{{ route('admin.themes.index') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.themes.index'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.themes.index'),
-                       ])>
-                        <span class="font-display">Themes</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.themes.index'), $navIdle => ! request()->routeIs('admin.themes.index')])>
+                        Themes
                     </a>
                     <a href="{{ route('admin.themes.settings') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.themes.settings'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.themes.settings'),
-                       ])>
-                        <span class="font-display">Theme Settings</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.themes.settings'), $navIdle => ! request()->routeIs('admin.themes.settings')])>
+                        Customize
                     </a>
                 @endcan
 
-                {{-- Ecommerce nav (visible only when the toggle is on) --}}
+                {{-- Shop (visible only when the ecommerce toggle is on) --}}
                 @if(\App\Support\Feature::ecommerce())
+                    <p class="{{ $sectionLabel }} mt-4">Shop</p>
                     <a href="{{ route('admin.shop.products') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.shop.products'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.shop.products'),
-                       ])>
-                        <span class="font-display">Products</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.shop.products'), $navIdle => ! request()->routeIs('admin.shop.products')])>
+                        Products
                     </a>
                     <a href="{{ route('admin.shop.orders') }}"
-                       @class([
-                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
-                           'bg-accent/10 text-accent' => request()->routeIs('admin.shop.orders'),
-                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.shop.orders'),
-                       ])>
-                        <span class="font-display">Orders</span>
+                       @class([$navItem, $navActive => request()->routeIs('admin.shop.orders'), $navIdle => ! request()->routeIs('admin.shop.orders')])>
+                        Orders
                     </a>
                 @endif
             </nav>
@@ -124,8 +98,10 @@
                 </div>
             </header>
 
-            <main class="flex-1 p-6 lg:p-8">
-                {{ $slot }}
+            <main class="flex-1 px-6 py-8 lg:px-10 lg:py-10">
+                <div class="mx-auto w-full max-w-6xl">
+                    {{ $slot }}
+                </div>
             </main>
         </div>
     </div>

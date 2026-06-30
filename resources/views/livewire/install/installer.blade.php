@@ -1,6 +1,6 @@
 <div class="w-full">
     <div class="mb-8 text-center">
-        <h1 class="font-display text-2xl font-bold text-ink">Set up Seconds</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">Set up Seconds</h1>
         <p class="mt-1 text-sm text-muted">You only need to do this once.</p>
     </div>
 

@@ -1,6 +1,6 @@
 <div>
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="font-display text-2xl font-bold text-ink">Media Library</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">Media Library</h1>
     </div>
 
     @if (session('success'))

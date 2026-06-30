@@ -3,7 +3,7 @@
         <a href="{{ route('admin.pages.index') }}"
            wire:navigate
            class="text-sm text-muted transition hover:text-ink">&larr; Pages</a>
-        <h1 class="font-display text-2xl font-bold text-ink">
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">
             {{ $editing ? 'Edit Page' : 'New Page' }}
         </h1>
     </div>

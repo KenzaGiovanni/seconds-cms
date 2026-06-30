@@ -1,6 +1,6 @@
 <div>
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="font-display text-2xl font-bold text-ink">Themes</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">Themes</h1>
         <a href="{{ route('admin.themes.settings') }}" wire:navigate
            class="text-sm text-muted hover:text-ink">Theme settings &rarr;</a>
     </div>

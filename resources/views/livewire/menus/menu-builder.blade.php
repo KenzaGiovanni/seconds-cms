@@ -1,7 +1,7 @@
 <div>
     <div class="mb-6 flex items-center gap-4">
         <a href="{{ route('admin.menus.index') }}" wire:navigate class="text-sm text-muted hover:text-ink">&larr; Menus</a>
-        <h1 class="font-display text-2xl font-bold text-ink">{{ $editing ? 'Edit Menu' : 'New Menu' }}</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">{{ $editing ? 'Edit Menu' : 'New Menu' }}</h1>
     </div>
 
     @if (session('success'))

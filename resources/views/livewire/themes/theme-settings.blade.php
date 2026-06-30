@@ -1,7 +1,7 @@
 <div>
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="font-display text-2xl font-bold text-ink">Theme Settings</h1>
+            <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">Theme Settings</h1>
             @if ($activeTheme)
                 <p class="mt-1 text-sm text-muted">Active theme: <span class="font-medium text-ink">{{ $activeTheme->name }}</span></p>
             @endif
