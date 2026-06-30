@@ -45,6 +45,14 @@
                        ])>
                         <span class="font-display">Posts</span>
                     </a>
+                    <a href="{{ route('admin.media.index') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.media.*'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.media.*'),
+                       ])>
+                        <span class="font-display">Media</span>
+                    </a>
                 @endcan
 
                 {{-- Ecommerce nav (visible only when the toggle is on) --}}

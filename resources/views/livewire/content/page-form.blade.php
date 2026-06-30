@@ -92,7 +92,20 @@
 
         {{-- Sidebar --}}
         <div class="space-y-5">
-            {{-- Publish box --}}
+            {{-- Featured image --}}
+        <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-3">
+            <h2 class="font-display text-sm font-semibold text-ink">Featured image</h2>
+            @if ($featuredImageUrl)
+                <img src="{{ $featuredImageUrl }}" alt="" class="w-full rounded object-cover" style="max-height:160px" />
+                <button type="button" wire:click="removeFeaturedImage"
+                        class="text-xs text-red-500 hover:text-red-700">Remove image</button>
+            @else
+                <p class="text-xs text-muted">No image selected.</p>
+            @endif
+            <livewire:media.media-picker />
+        </div>
+
+        {{-- Publish box --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">
                 <h2 class="font-display text-sm font-semibold text-ink">Publish</h2>
 

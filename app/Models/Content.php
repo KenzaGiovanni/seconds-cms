@@ -20,7 +20,7 @@ class Content extends Model
 
     protected $fillable = [
         'type', 'title', 'slug', 'status', 'body', 'blocks',
-        'excerpt', 'author_id', 'published_at', 'meta_title', 'meta_description',
+        'excerpt', 'featured_image_id', 'author_id', 'published_at', 'meta_title', 'meta_description',
     ];
 
     protected $casts = [
@@ -32,6 +32,11 @@ class Content extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function featuredImage(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'featured_image_id');
     }
 
     public function categories(): BelongsToMany

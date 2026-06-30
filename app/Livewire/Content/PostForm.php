@@ -9,6 +9,7 @@ use App\Models\Content;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Support\Str;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -34,6 +35,9 @@ class PostForm extends Component
     /** Comma-separated tag names as typed by the user. */
     public string $tagInput = '';
 
+    public ?int $featuredImageId = null;
+    public ?string $featuredImageUrl = null;
+
     public function mount(?int $id = null): void
     {
         abort_unless(auth()->user()->can(Permission::ContentManage->value), 403);
@@ -52,6 +56,8 @@ class PostForm extends Component
             $this->selectedCategories = $post->categories->pluck('id')->map(fn ($id) => (int) $id)->all();
             $this->tagInput = $post->tags->pluck('name')->join(', ');
             $this->slugManuallyEdited = true;
+            $this->featuredImageId = $post->featured_image_id;
+            $this->featuredImageUrl = $post->featuredImage?->url();
         }
     }
 
@@ -65,6 +71,19 @@ class PostForm extends Component
     public function updatedSlug(): void
     {
         $this->slugManuallyEdited = true;
+    }
+
+    #[On('media-selected')]
+    public function onMediaSelected(int $id, string $url): void
+    {
+        $this->featuredImageId = $id;
+        $this->featuredImageUrl = $url;
+    }
+
+    public function removeFeaturedImage(): void
+    {
+        $this->featuredImageId = null;
+        $this->featuredImageUrl = null;
     }
 
     public function save(): void
@@ -108,6 +127,7 @@ class PostForm extends Component
             'published_at' => $data['publishedAt'] ? now()->parse($data['publishedAt']) : null,
             'meta_title' => $data['metaTitle'] ?: null,
             'meta_description' => $data['metaDescription'] ?: null,
+            'featured_image_id' => $this->featuredImageId,
             'author_id' => auth()->id(),
         ];
 
