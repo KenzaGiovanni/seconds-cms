@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RolesAndPermissionsSeeder::class);
+        $this->call(SettingsSeeder::class);
 
         // Dev super-admin login.
         $admin = User::firstOrCreate(

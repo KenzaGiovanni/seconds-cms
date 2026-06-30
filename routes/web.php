@@ -35,4 +35,10 @@ Route::post('/logout', function (Request $request) {
 // Admin area (auth + staff-role gated).
 Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
     Route::get('/', Dashboard::class)->name('admin.dashboard');
+
+    // Ecommerce module — gated by the `ecommerce` feature toggle.
+    Route::middleware('ecommerce')->prefix('shop')->name('admin.shop.')->group(function () {
+        Route::get('/products', fn () => response()->json(['module' => 'products']))->name('products');
+        Route::get('/orders', fn () => response()->json(['module' => 'orders']))->name('orders');
+    });
 });

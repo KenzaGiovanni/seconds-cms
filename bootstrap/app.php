@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEcommerceEnabled;
 use App\Http\Middleware\EnsureStaff;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'staff' => EnsureStaff::class,
+            'ecommerce' => EnsureEcommerceEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

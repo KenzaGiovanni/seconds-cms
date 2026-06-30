@@ -25,7 +25,25 @@
                    ])>
                     <span class="font-display">Dashboard</span>
                 </a>
-                {{-- More nav items land here as phases ship --}}
+                {{-- Ecommerce nav (visible only when the toggle is on) --}}
+                @if(\App\Support\Feature::ecommerce())
+                    <a href="{{ route('admin.shop.products') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.shop.products'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.shop.products'),
+                       ])>
+                        <span class="font-display">Products</span>
+                    </a>
+                    <a href="{{ route('admin.shop.orders') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.shop.orders'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.shop.orders'),
+                       ])>
+                        <span class="font-display">Orders</span>
+                    </a>
+                @endif
             </nav>
         </aside>
 
