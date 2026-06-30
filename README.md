@@ -140,13 +140,19 @@ tests/
 
 ## Build status
 
-Phase 0 (Foundation) is **complete**: auth, RBAC, admin shell, settings + ecommerce toggle, theme engine, and install flow.
+Phase 0 (Foundation) and Phase 1 (Core CMS) are both **complete**. Test suite: **147/147 green**.
 
-Phase 1 (Core CMS) is **in progress** - the content + rendering spine (1.0) has shipped: content model, publish states, front-end rendering pipeline, theme settings resolution, and content blocks. CRUD/admin screens are next. Suite green.
+What's shipped:
+- Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
+- Content model (pages + posts, STI-lite), publish states, content blocks
+- Admin CRUD: pages, posts, media library, menus, theme install/activate/uninstall, theme settings
+- Front-end rendering: home, page, post, blog listing, category + tag archives
+- SEO head (OG, canonical, noindex), /sitemap.xml, /robots.txt
+- Default theme: full Option B design system (Space Grotesk + Inter, CSS custom props, sticky nav, footer, post-card grid, article layout, all block partials)
 
 Roadmap (see the spec for detail):
 
-1. **Phase 1** - Core CMS: pages, posts, media, menus, SEO, theme install/settings UI, default theme.
+1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders.
 3. **Phase 3** - Payments (Xendit).
 4. **Phase 4** - Delivery (KiriminAja).
