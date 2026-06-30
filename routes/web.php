@@ -10,6 +10,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
+use App\Livewire\Themes\ThemeAdmin;
 use App\Livewire\Themes\ThemeSettings as ThemeSettingsAdmin;
 use App\Livewire\Install\Installer;
 use Illuminate\Http\Request;
@@ -90,6 +91,7 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
     Route::get('/media', MediaLibrary::class)->name('admin.media.index');
 
     // Themes
+    Route::get('/themes', ThemeAdmin::class)->name('admin.themes.index');
     Route::get('/themes/settings', ThemeSettingsAdmin::class)->name('admin.themes.settings');
 
     // Menus
