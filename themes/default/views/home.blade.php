@@ -7,7 +7,7 @@
         <h2>Latest posts</h2>
         <ul>
             @foreach($posts as $post)
-                <li><a href="/{{ $post->slug }}">{{ $post->title }}</a></li>
+                <li><a href="{{ route('blog.show', $post->slug) }}">{{ $post->title }}</a></li>
             @endforeach
         </ul>
     @endif

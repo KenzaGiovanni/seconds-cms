@@ -37,6 +37,14 @@
                        ])>
                         <span class="font-display">Pages</span>
                     </a>
+                    <a href="{{ route('admin.posts.index') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.posts.*'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.posts.*'),
+                       ])>
+                        <span class="font-display">Posts</span>
+                    </a>
                 @endcan
 
                 {{-- Ecommerce nav (visible only when the toggle is on) --}}

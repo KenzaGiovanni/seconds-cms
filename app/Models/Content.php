@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Base content model. Pages and posts share this one table (`contents`) and are
@@ -31,6 +32,17 @@ class Content extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        // Explicit keys required: Post subclass would otherwise infer 'post_id' as the FK.
+        return $this->belongsToMany(Category::class, 'category_content', 'content_id', 'category_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'content_tag', 'content_id', 'tag_id');
     }
 
     /** Published = status published AND publish time has arrived. */

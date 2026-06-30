@@ -4,14 +4,26 @@ use App\Http\Controllers\FrontController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Content\PageForm;
 use App\Livewire\Content\PageList;
+use App\Livewire\Content\PostForm;
+use App\Livewire\Content\PostList;
 use App\Livewire\Dashboard;
 use App\Livewire\Install\Installer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Front-end home (rendered through the active theme).
+// Front-end: home + blog routes (MUST come before the page catch-all).
 Route::get('/', [FrontController::class, 'home'])->name('home');
+Route::get('/blog', [FrontController::class, 'blog'])->name('blog.index');
+Route::get('/blog/{slug}', [FrontController::class, 'post'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
+    ->name('blog.show');
+Route::get('/category/{slug}', [FrontController::class, 'category'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
+    ->name('category.show');
+Route::get('/tag/{slug}', [FrontController::class, 'tag'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
+    ->name('tag.show');
 
 // Lightweight health check — confirms the app boots and can answer.
 Route::get('/health', function () {
@@ -47,6 +59,13 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
         Route::get('/', PageList::class)->name('index');
         Route::get('/create', PageForm::class)->name('create');
         Route::get('/{id}/edit', PageForm::class)->name('edit');
+    });
+
+    // Content: Posts
+    Route::prefix('posts')->name('admin.posts.')->group(function () {
+        Route::get('/', PostList::class)->name('index');
+        Route::get('/create', PostForm::class)->name('create');
+        Route::get('/{id}/edit', PostForm::class)->name('edit');
     });
 
     // Ecommerce module — gated by the `ecommerce` feature toggle.
