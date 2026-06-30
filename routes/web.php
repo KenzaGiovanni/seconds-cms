@@ -32,7 +32,7 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->name('logout')->middleware('auth');
 
-// Admin area (auth-gated).
-Route::middleware('auth')->prefix('admin')->group(function () {
+// Admin area (auth + staff-role gated).
+Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
     Route::get('/', Dashboard::class)->name('admin.dashboard');
 });

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,8 +17,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Dev admin login (Phase 0.3 will formalise roles).
-        User::firstOrCreate(
+        $this->call(RolesAndPermissionsSeeder::class);
+
+        // Dev super-admin login.
+        $admin = User::firstOrCreate(
             ['email' => 'admin@seconds.test'],
             [
                 'name' => 'Seconds Admin',
@@ -25,5 +28,7 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ],
         );
+
+        $admin->syncRoles([Role::SuperAdmin->value]);
     }
 }
