@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Menu;
 use App\Models\User;
 use App\Support\ThemeManager;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,5 +30,10 @@ class AppServiceProvider extends ServiceProvider
         } catch (QueryException) {
             // Themes table doesn't exist yet (pre-migration / fresh install).
         }
+
+        // @menu('location') — renders the menu assigned to a theme location.
+        Blade::directive('menu', function (string $expression) {
+            return "<?php echo view('theme::partials.menu', ['menu' => \App\Models\Menu::forLocation({$expression})])->render(); ?>";
+        });
     }
 }

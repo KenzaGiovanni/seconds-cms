@@ -21,6 +21,19 @@ class ThemeManager
         return Theme::active();
     }
 
+    public function activeManifest(): ?ThemeManifest
+    {
+        $theme = $this->active();
+        if (! $theme) {
+            return null;
+        }
+        $path = $this->themesPath($theme->slug);
+        if (! is_dir($path)) {
+            return null;
+        }
+        return ThemeManifest::fromPath($path);
+    }
+
     /**
      * Register the `theme::` Blade namespace. The default theme is always
      * registered as the base/fallback (there is always a theme), and the active

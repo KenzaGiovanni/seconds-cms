@@ -53,6 +53,14 @@
                        ])>
                         <span class="font-display">Media</span>
                     </a>
+                    <a href="{{ route('admin.menus.index') }}"
+                       @class([
+                           'flex items-center gap-3 rounded-[var(--radius-btn)] px-3 py-2 text-sm font-medium transition',
+                           'bg-accent/10 text-accent' => request()->routeIs('admin.menus.*'),
+                           'text-muted hover:bg-soft hover:text-ink' => ! request()->routeIs('admin.menus.*'),
+                       ])>
+                        <span class="font-display">Menus</span>
+                    </a>
                 @endcan
 
                 {{-- Ecommerce nav (visible only when the toggle is on) --}}

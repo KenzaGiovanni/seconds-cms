@@ -14,6 +14,7 @@ class ThemeManifest
         public readonly ?string $screenshot,
         public readonly array $supports,
         public readonly array $settings,
+        public readonly array $locations,
     ) {}
 
     public static function fromArray(array $data): self
@@ -32,6 +33,7 @@ class ThemeManifest
             screenshot: $data['screenshot'] ?? null,
             supports: $data['supports'] ?? ['content'],
             settings: $data['settings'] ?? [],
+            locations: $data['locations'] ?? [],
         );
     }
 

@@ -8,6 +8,8 @@ use App\Livewire\Content\PostForm;
 use App\Livewire\Content\PostList;
 use App\Livewire\Dashboard;
 use App\Livewire\Media\MediaLibrary;
+use App\Livewire\Menus\MenuBuilder;
+use App\Livewire\Menus\MenuList;
 use App\Livewire\Install\Installer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +73,13 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
 
     // Media Library
     Route::get('/media', MediaLibrary::class)->name('admin.media.index');
+
+    // Menus
+    Route::prefix('menus')->name('admin.menus.')->group(function () {
+        Route::get('/', MenuList::class)->name('index');
+        Route::get('/create', MenuBuilder::class)->name('create');
+        Route::get('/{id}/edit', MenuBuilder::class)->name('edit');
+    });
 
     // Ecommerce module — gated by the `ecommerce` feature toggle.
     Route::middleware('ecommerce')->prefix('shop')->name('admin.shop.')->group(function () {

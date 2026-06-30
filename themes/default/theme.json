@@ -5,6 +5,7 @@
     "author": "&Now",
     "screenshot": null,
     "supports": ["content", "ecommerce"],
+    "locations": ["primary", "footer"],
     "settings": {
         "primary_color": "#16513F",
         "show_hero": true
