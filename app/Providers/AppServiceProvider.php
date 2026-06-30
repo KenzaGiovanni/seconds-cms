@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Menu;
 use App\Models\User;
+use App\Support\BlockRegistry;
 use App\Support\ThemeManager;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Blade;
@@ -15,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ThemeManager::class);
+        $this->app->singleton(BlockRegistry::class);
     }
 
     public function boot(): void
