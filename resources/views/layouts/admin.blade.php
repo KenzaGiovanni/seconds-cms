@@ -49,6 +49,10 @@
                        @class([$navItem, $navActive => request()->routeIs('admin.menus.*'), $navIdle => ! request()->routeIs('admin.menus.*')])>
                         Menus
                     </a>
+                    <a href="{{ route('admin.forms.index') }}"
+                       @class([$navItem, $navActive => request()->routeIs('admin.forms.*'), $navIdle => ! request()->routeIs('admin.forms.*')])>
+                        Forms
+                    </a>
                 @endcan
 
                 {{-- Appearance --}}

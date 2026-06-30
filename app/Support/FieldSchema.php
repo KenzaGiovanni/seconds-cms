@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
  */
 class FieldSchema
 {
-    public const TYPES = ['text', 'textarea', 'richtext', 'image', 'number', 'toggle', 'select', 'repeater'];
+    public const TYPES = ['text', 'textarea', 'richtext', 'email', 'image', 'number', 'toggle', 'select', 'repeater'];
 
     /**
      * @param  array<string, string>  $options  value => label, for `select`

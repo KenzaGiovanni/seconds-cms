@@ -7,6 +7,9 @@ use App\Livewire\Content\PageList;
 use App\Livewire\Content\PostForm;
 use App\Livewire\Content\PostList;
 use App\Livewire\Dashboard;
+use App\Livewire\Forms\FormBuilder;
+use App\Livewire\Forms\FormList;
+use App\Livewire\Forms\FormSubmissions;
 use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
@@ -89,6 +92,14 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
 
     // Media Library
     Route::get('/media', MediaLibrary::class)->name('admin.media.index');
+
+    // Forms
+    Route::prefix('forms')->name('admin.forms.')->group(function () {
+        Route::get('/', FormList::class)->name('index');
+        Route::get('/create', FormBuilder::class)->name('create');
+        Route::get('/{id}/edit', FormBuilder::class)->name('edit');
+        Route::get('/{id}/submissions', FormSubmissions::class)->name('submissions');
+    });
 
     // Themes
     Route::get('/themes', ThemeAdmin::class)->name('admin.themes.index');
