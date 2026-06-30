@@ -7,6 +7,9 @@
         <div class="feature-grid-items">
             @foreach($data['items'] as $item)
                 <div class="feature-card">
+                    @if(!empty($item['icon']))
+                        <div class="feature-icon">{{ $item['icon'] }}</div>
+                    @endif
                     @if(!empty($item['title']))
                         <h3>{{ $item['title'] }}</h3>
                     @endif

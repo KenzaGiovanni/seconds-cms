@@ -138,25 +138,63 @@ tests/
   Feature/           # Auth, Settings, Themes, Install, Content
 ```
 
+## Authoring model: theme-defined blocks
+
+Page layout is composed from **blocks**, and blocks are defined by the **theme**, not hardcoded. Each theme ships a `blocks.php` manifest mapping a block `type` to a label + **field schema**, plus a matching `views/blocks/<type>.blade.php` partial:
+
+```php
+// themes/default/blocks.php
+'hero' => [
+    'label' => 'Hero',
+    'fields' => [
+        ['key' => 'heading', 'type' => 'text', 'label' => 'Heading'],
+        ['key' => 'cta_url', 'type' => 'text', 'label' => 'Button URL'],
+        // ...
+    ],
+],
+```
+
+The admin **auto-generates the editor form** from that schema (`BlockRegistry` reads the active theme; the page/post editor renders an input per field type). Field types: `text`, `textarea`, `richtext`, `email`, `image`, `number`, `toggle`, `select`, and `repeater` (nested groups - e.g. a feature grid's cards). To add a block: declare it in `blocks.php` and ship a partial of the same name. The default theme ships Hero, Feature grid, Gallery, CTA, Image, Form, Heading, Paragraph, and Divider as the reference set.
+
+## Forms
+
+The **Forms** module builds on the same field-schema engine. Define a form in the admin (fields + notify email + success message), then embed it:
+
+- **`@form('contact')`** Blade directive in a theme template, or
+- the **Form block** on any page (enter the form slug).
+
+Submissions POST to `/forms/{slug}`, are validated against the form's schema, pass a honeypot anti-spam check, and are stored as `form_submissions` (viewable in the admin). Email notification is stubbed until mail is configured.
+
+### See it: the sample page
+
+```bash
+php artisan db:seed --class=DemoContentSeeder   # creates a /sample page + contact form
+```
+
+Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact form, rendered through the default theme.
+
 ## Build status
 
-Phase 0 (Foundation) and Phase 1 (Core CMS) are both **complete**. Test suite: **147/147 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), and Phase 1.5 (Block system v2 + Forms) are **complete**. Test suite: **189/189 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
 - Content model (pages + posts, STI-lite), publish states, content blocks
-- Admin CRUD: pages, posts, media library, menus, theme install/activate/uninstall, theme settings
+- Admin CRUD: pages, posts, media library, menus, forms, theme install/activate/uninstall, theme settings
+- **Schema-driven block system**: theme-defined blocks, auto-generated editor forms, repeater fields
+- **Forms**: builder, submissions, `@form` directive + Form block, honeypot
 - Front-end rendering: home, page, post, blog listing, category + tag archives
 - SEO head (OG, canonical, noindex), /sitemap.xml, /robots.txt
-- Default theme: full Option B design system (Space Grotesk + Inter, CSS custom props, sticky nav, footer, post-card grid, article layout, all block partials)
+- Default theme: full Option B design system + a styled section-block library (Hero, Features, Gallery, CTA)
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
-2. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders.
-3. **Phase 3** - Payments (Xendit).
-4. **Phase 4** - Delivery (KiriminAja).
-5. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.
+2. **Phase 1.5** - Block system v2 + Forms - **DONE**
+3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders.
+4. **Phase 3** - Payments (Xendit).
+5. **Phase 4** - Delivery (KiriminAja).
+6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.
 
 ## License
 
