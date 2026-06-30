@@ -109,29 +109,40 @@ themes/default/
   assets/           # css / js / images
 ```
 
-The active theme's views are registered under the `theme::` Blade namespace by `App\Support\ThemeManager`, with fallback to the default theme. Exactly one theme is active at a time; activating one deactivates the rest in a transaction, and the active theme cannot be uninstalled.
+The active theme's views are registered under the `theme::` Blade namespace by `App\Support\ThemeManager`. The default theme is always registered as the base/fallback and the active theme is prepended so its templates override it. Exactly one theme is active at a time; activating one deactivates the rest in a transaction, and the active theme cannot be uninstalled. A theme's effective settings are resolved by `App\Support\ThemeSettings` - `theme.json` defaults merged with stored overrides.
+
+## Content & front-end rendering
+
+Pages and posts share one `contents` table, distinguished by a `type` discriminator (STI-lite). Query type-scoped via the `Page` / `Post` models, or cross-type via the `Content` base model. Content is `draft` / `published` / `scheduled`; the `published()` scope gates on status **and** publish time.
+
+The front-end is a thin pipeline: `GET /` renders the theme's `home` template, and a single-segment catch-all `GET /{slug}` resolves a published content item and renders `theme::{type}` (`page` / `post`) with the content, its rendered blocks, and theme settings. Drafts, not-yet-published, and unknown slugs return 404.
+
+Rich content is stored as **blocks** - an ordered `blocks` json array of `{ type, data }`. `App\Support\BlockRenderer` maps each block to a `theme::blocks.<type>` partial, falling back safely for unknown types so a bad block never fatals a page.
 
 ## Project layout
 
 ```
 app/
-  Enums/            # Role + Permission (capability SSOT)
-  Http/Middleware/  # EnsureStaff, EnsureEcommerceEnabled
-  Livewire/         # Auth, Dashboard, Installer
-  Models/           # User, Setting, Theme
-  Support/          # Feature, ThemeManager, ThemeManifest
+  Enums/             # Role, Permission, ContentStatus
+  Http/Controllers/  # FrontController (home + slug rendering)
+  Http/Middleware/   # EnsureStaff, EnsureEcommerceEnabled
+  Livewire/          # Auth, Dashboard, Installer
+  Models/            # User, Setting, Theme, Content (+ Page, Post)
+  Support/           # Feature, ThemeManager, ThemeManifest, ThemeSettings, BlockRenderer
 database/
   migrations/
-  seeders/          # RolesAndPermissions, Settings, DatabaseSeeder
+  seeders/           # RolesAndPermissions, Settings, DatabaseSeeder
 themes/
-  default/          # ships pre-installed + active; removable like any theme
+  default/           # ships pre-installed + active; base layout, page/post/home, block partials
 tests/
-  Feature/          # Auth, Settings, Themes, Install
+  Feature/           # Auth, Settings, Themes, Install, Content
 ```
 
 ## Build status
 
-Phase 0 (Foundation) is **complete**: auth, RBAC, admin shell, settings + ecommerce toggle, theme engine, and install flow. Suite green.
+Phase 0 (Foundation) is **complete**: auth, RBAC, admin shell, settings + ecommerce toggle, theme engine, and install flow.
+
+Phase 1 (Core CMS) is **in progress** - the content + rendering spine (1.0) has shipped: content model, publish states, front-end rendering pipeline, theme settings resolution, and content blocks. CRUD/admin screens are next. Suite green.
 
 Roadmap (see the spec for detail):
 
