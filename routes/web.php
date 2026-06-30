@@ -28,6 +28,20 @@ Route::get('/tag/{slug}', [FrontController::class, 'tag'])
     ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
     ->name('tag.show');
 
+// SEO: sitemap + robots (before the catch-all).
+Route::get('/sitemap.xml', function () {
+    $pages = \App\Models\Page::published()->orderBy('updated_at', 'desc')->get();
+    $posts = \App\Models\Post::published()->orderBy('updated_at', 'desc')->get();
+
+    return response()->view('sitemap', compact('pages', 'posts'))
+        ->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nAllow: /\nSitemap: " . url('/sitemap.xml') . "\n")
+        ->header('Content-Type', 'text/plain');
+})->name('robots');
+
 // Lightweight health check — confirms the app boots and can answer.
 Route::get('/health', function () {
     return response()->json([
