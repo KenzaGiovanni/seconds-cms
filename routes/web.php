@@ -2,6 +2,7 @@
 
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
+use App\Livewire\Install\Installer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,9 @@ Route::get('/health', function () {
         'time' => now()->toIso8601String(),
     ]);
 })->name('health');
+
+// First-run installer (only accessible when no users exist).
+Route::get('/install', Installer::class)->name('install');
 
 // Authentication (no public registration — admins are provisioned).
 Route::middleware('guest')->group(function () {
