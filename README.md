@@ -1,58 +1,146 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Seconds CMS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-native CMS that runs as a **plain content site** or, with a single toggle, as a **full ecommerce store**. Think "WordPress + WooCommerce", but built deliberately on Laravel instead of bolted together - with installable, backend-editable themes and first-class Indonesian commerce (Xendit payments, KiriminAja delivery).
 
-## About Laravel
+Built by Kenza under &Now. Target users: &Now consulting clients (Indonesian SMEs) first, productizable later.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **Single source of truth:** product and technical decisions live in [`../seconds-spec.md`](../seconds-spec.md). Build state and decisions are logged in [`../MEMORY.md`](../MEMORY.md). Read those before doing build work.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## What it does
 
-## Learning Laravel
+- **One codebase, two modes.** Content CMS by default; flip the `ecommerce` setting to unlock catalog, cart, checkout, orders, payments, and delivery.
+- **Installable themes.** WordPress-style lifecycle - install from a zip, activate (one active theme at a time), uninstall. Themes are server-rendered Blade packages, editable from the backend.
+- **Two-tier theme editing.** Clients customize via safe settings + content blocks. Raw Blade editing is gated to `developer` / `super-admin` roles only.
+- **Role-based access.** Four roles (`super-admin`, `developer`, `admin`, `editor`) via spatie/laravel-permission.
+- **Indonesian commerce.** Xendit (VA, QRIS, e-wallets, cards) and KiriminAja (live rates, booking, tracking) - both behind swappable internal interfaces.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Stack
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Layer | Choice |
+|---|---|
+| Backend | Laravel 13 (monolith), PHP 8.4 |
+| Admin UI | Livewire 4 + Blade |
+| Themes | Blade-based, server-rendered, installable + activatable |
+| RBAC | spatie/laravel-permission 8 |
+| Database | MySQL 9 |
+| Tests | Pest 4 |
+| Formatting | Laravel Pint |
+| Payments | Xendit (`xendit/xendit-php`) - Phase 3 |
+| Delivery | KiriminAja (`kiriminaja/php`) - Phase 4 |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Requirements
 
-## Agentic Development
+- PHP 8.4+
+- Composer 2
+- MySQL 9 (or compatible)
+- Node 20+ / npm
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Getting started
 
 ```bash
-composer require laravel/boost --dev
+# 1. Install dependencies
+composer install
+npm install
 
-php artisan boost:install
+# 2. Environment
+cp .env.example .env
+php artisan key:generate
+
+# 3. Configure your database in .env, then create the schema
+#    Default dev DB: `seconds` (root / no password)
+php artisan migrate
+
+# 4. Build front-end assets
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Two ways to set up the admin user
 
-## Contributing
+**Option A - the installer (mirrors a real first-run).** Start the server and visit `/install`. It runs migrations, seeds roles + settings, installs and activates the default theme, and creates your super-admin. The installer is only reachable while no users exist.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan serve
+# visit http://localhost:8000/install
+```
 
-## Code of Conduct
+**Option B - seed a dev admin.** For local development, seed a ready-made super-admin:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan db:seed
+# login: admin@seconds.test / password
+```
 
-## Security Vulnerabilities
+Then sign in at `/admin/login`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Day-to-day
+
+```bash
+php artisan serve        # run the app
+npm run dev              # vite dev server (hot reload)
+php artisan test         # run the Pest suite
+./vendor/bin/pint        # format (run before committing)
+php artisan db:seed      # reseed roles, settings, dev admin
+```
+
+## The ecommerce toggle
+
+Ecommerce is off by default. It is a settings-backed feature flag, read through the `App\Support\Feature` helper and enforced by the `ecommerce` route middleware:
+
+```php
+use App\Support\Feature;
+
+if (Feature::ecommerce()) {
+    // shop surfaces are live
+}
+```
+
+Flip it by setting the `ecommerce` value to `true` in the `settings` table (admin UI lands in a later phase). When off, ecommerce routes 404 and the shop nav is hidden.
+
+## Themes
+
+A theme is a folder under `themes/<slug>/`:
+
+```
+themes/default/
+  theme.json        # manifest: slug, name, version, supports, settings schema
+  views/            # Blade templates
+  assets/           # css / js / images
+```
+
+The active theme's views are registered under the `theme::` Blade namespace by `App\Support\ThemeManager`, with fallback to the default theme. Exactly one theme is active at a time; activating one deactivates the rest in a transaction, and the active theme cannot be uninstalled.
+
+## Project layout
+
+```
+app/
+  Enums/            # Role + Permission (capability SSOT)
+  Http/Middleware/  # EnsureStaff, EnsureEcommerceEnabled
+  Livewire/         # Auth, Dashboard, Installer
+  Models/           # User, Setting, Theme
+  Support/          # Feature, ThemeManager, ThemeManifest
+database/
+  migrations/
+  seeders/          # RolesAndPermissions, Settings, DatabaseSeeder
+themes/
+  default/          # ships pre-installed + active; removable like any theme
+tests/
+  Feature/          # Auth, Settings, Themes, Install
+```
+
+## Build status
+
+Phase 0 (Foundation) is **complete**: auth, RBAC, admin shell, settings + ecommerce toggle, theme engine, and install flow. Suite green.
+
+Roadmap (see the spec for detail):
+
+1. **Phase 1** - Core CMS: pages, posts, media, menus, SEO, theme install/settings UI, default theme.
+2. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders.
+3. **Phase 3** - Payments (Xendit).
+4. **Phase 4** - Delivery (KiriminAja).
+5. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Proprietary - &Now. All rights reserved.
