@@ -264,7 +264,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, and Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish) are all **complete**. Phase 3 (Payments) is **in progress** - the gateway contract + payment state machine + order-expiry model (3.0), the manual bank-transfer flow (3.1), Xendit activation + invoice creation (3.2), and Xendit webhook handling + reconciliation (3.3) have landed; the consolidated payments admin UI is next. Test suite: **394/394 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish), and **Phase 3 (Payments: manual bank transfer + Xendit, 3.0-3.4) are all complete**. Test suite: **399/399 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -289,17 +289,18 @@ What's shipped:
 - **Manual bank-transfer flow** (3.1): checkout now calls `PaymentService::initiate()` on every order, creating a pending payment and stamping the payment window. The order confirmation page shows the bank details, a live countdown to `payment_due_at`, and a proof-of-payment upload form (image/PDF, private disk, owner-gated). Admins configure bank details + the payment window at `/admin/shop/payments/settings`, and work a **verification queue** at `/admin/shop/payments` (`orders.manage`) to confirm (order -> paid) or reject (back to pending, with a reason) submitted proof.
 - **Xendit activation + invoice creation** (3.2): `App\Payments\XenditGateway` calls Xendit's REST API directly via Laravel's `Http` facade (not the `xendit/xendit-php` SDK - no outbound network access to install it in the build environment; see `seconds-spec.md` §14 for the swap-back plan) to create a hosted **Xendit Invoice** covering VA/QRIS/e-wallet/card in one integration surface. Admins activate Xendit from `/admin/shop/payments/settings` (secret/public keys + webhook token, masked once saved, live-verified against Xendit's balance endpoint before activating; enabled-methods checkboxes) - this flips `payment_provider` to `xendit`, with manual staying one click away as a fallback. Checkout redirects the customer straight to the hosted invoice page when Xendit is active; the pending `Payment` row snapshots the invoice id, amount, currency, and full invoice response.
 - **Xendit webhook handling + reconciliation** (3.3): `POST /webhooks/xendit` (the app's first CSRF-exempt route) verifies the `x-callback-token` header before any DB write, then applies the event through the same idempotent `PaymentService::applyEvent()` every other payment path uses - a `PAID` webhook marks the order paid, an `EXPIRED` one cancels + restocks it, unknown/bad-token requests are rejected safely. A `payments:reconcile` command (scheduled every 5 minutes) re-queries Xendit for any pending payment older than 5 minutes as a safety net for a missed webhook; the admin order detail screen has a matching "Re-check" button next to any pending Xendit payment.
+- **Payments admin + methods UI** (3.4, closes Phase 3): the checkout payment-method selector now reflects the real active provider - bank transfer only in manual mode, or exactly the methods enabled in Xendit activation once it's live (toggling a method off there hides it at checkout immediately). `OrderDetail` gained a genuine **per-order payment timeline**: every payment attempt with its amount/created/paid timestamps, proof-upload details (reference + a link to view the file) and verifier for manual transfers, and a **Refund** action for any `paid` payment (`PaymentService::markRefunded()` - marks the payment refunded and moves the order to `refunded` if it can; the real gateway refund call is deferred/log-only in v1, matching the Forms-module stub convention).
 
-### Payments (in progress)
+### Payments
 
-Two modes behind one interface, chosen by a `payment_provider` setting: **manual bank transfer** (default, live) and **Xendit** (opt-in, VA/QRIS/e-wallet/card - activation, invoice creation, webhooks, and reconciliation are all live as of 3.2/3.3). Both share the payment-window expiry above. The combined payments admin UI (provider selector, per-order timeline, refunds) is the remaining Phase 3 slice - see `seconds-spec.md` §18.
+Two modes behind one interface, chosen by a `payment_provider` setting: **manual bank transfer** (default) and **Xendit** (opt-in, VA/QRIS/e-wallet/card). Both share the payment-window expiry. Checkout, admin verification/activation, webhooks, reconciliation, the per-order timeline, and refund initiation are all live - see `seconds-spec.md` §18 for the full breakdown.
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
 3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **DONE** (2.0-2.5 all shipped).
-4. **Phase 3** - Payments (manual bank transfer + Xendit) - **IN PROGRESS** (3.0 gateway contract + state machine + expiry, 3.1 manual bank-transfer flow, 3.2 Xendit activation + invoice creation, 3.3 Xendit webhooks + reconcile done; payments admin UI next).
+4. **Phase 3** - Payments (manual bank transfer + Xendit) - **DONE** (3.0-3.4 all shipped).
 5. **Phase 4** - Delivery (KiriminAja).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs, **storefront UI ownership refactor** (module-owned cart/checkout/portal/confirmation), and the **customer accounts + portal** build-out.
 

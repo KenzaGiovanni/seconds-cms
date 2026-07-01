@@ -67,23 +67,34 @@
             </div>
             <p class="checkout-note">Courier options and live rates are added in the delivery module - shown here for layout only.</p>
 
-            {{-- Payment method: manual bank transfer is live (Phase 3.1); Xendit methods arrive in 3.2 --}}
+            {{-- Payment method: reflects the active provider + its enabled methods (Phase 3.4) --}}
             <h2 class="checkout-heading">Payment method</h2>
             <div class="checkout-options" aria-label="Payment method">
-                <label class="checkout-option checkout-option--selected">
-                    <input type="radio" name="payment" checked disabled>
-                    <span class="checkout-option-body">
-                        <span class="checkout-option-title">Bank transfer</span>
-                        <span class="checkout-option-sub">Bank details + a proof-of-payment upload shown after you place the order</span>
-                    </span>
-                </label>
-                <label class="checkout-option checkout-option--disabled">
-                    <input type="radio" name="payment" disabled>
-                    <span class="checkout-option-body">
-                        <span class="checkout-option-title">Virtual Account / QRIS / E-wallet / Card</span>
-                        <span class="checkout-option-sub">Available once Xendit is activated</span>
-                    </span>
-                </label>
+                @foreach ($paymentMethods as $method)
+                    <label @class(['checkout-option', 'checkout-option--selected' => $loop->first])>
+                        <input type="radio" name="payment" @checked($loop->first) disabled>
+                        <span class="checkout-option-body">
+                            <span class="checkout-option-title">{{ $method->label() }}</span>
+                            <span class="checkout-option-sub">
+                                @if ($method->value === 'bank_transfer')
+                                    Bank details + a proof-of-payment upload shown after you place the order
+                                @else
+                                    Pay via the hosted Xendit checkout page after placing your order
+                                @endif
+                            </span>
+                        </span>
+                    </label>
+                @endforeach
+
+                @if ($paymentProvider->value === 'manual')
+                    <label class="checkout-option checkout-option--disabled">
+                        <input type="radio" name="payment" disabled>
+                        <span class="checkout-option-body">
+                            <span class="checkout-option-title">Virtual Account / QRIS / E-wallet / Card</span>
+                            <span class="checkout-option-sub">Available once Xendit is activated</span>
+                        </span>
+                    </label>
+                @endif
             </div>
         </div>
 

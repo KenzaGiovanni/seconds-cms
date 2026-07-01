@@ -110,6 +110,36 @@ class PaymentService
     }
 
     /**
+     * Admin-initiated refund: mark a settled payment refunded and move the
+     * order to `refunded` if it can (state transition only - v1 does not call
+     * out to a real refund API, matching the Forms module's "stub with a
+     * comment" convention).
+     */
+    public function markRefunded(Payment $payment): void
+    {
+        DB::transaction(function () use ($payment) {
+            $fresh = Payment::whereKey($payment->id)->lockForUpdate()->first();
+
+            if ($fresh->status !== PaymentStatus::Paid) {
+                return; // only a settled payment can be refunded
+            }
+
+            $fresh->status = PaymentStatus::Refunded;
+            $fresh->save();
+
+            $order = Order::whereKey($fresh->order_id)->lockForUpdate()->first();
+
+            if ($order->canTransitionTo(OrderStatus::Refunded)) {
+                $order->transitionTo(OrderStatus::Refunded);
+            }
+
+            // Real refund API call to the gateway is deferred (log-only in v1).
+        });
+
+        $payment->refresh();
+    }
+
+    /**
      * Apply a normalised gateway event (webhook / reconcile). Idempotent + safe
      * against out-of-order delivery: unknown external_id is a no-op, and
      * monotonic guards prevent a late/duplicate event from downgrading state.

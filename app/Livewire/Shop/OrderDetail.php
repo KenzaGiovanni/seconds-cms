@@ -60,6 +60,17 @@ class OrderDetail extends Component
         $this->order->refresh();
     }
 
+    public function refundPayment(int $paymentId, PaymentService $payments): void
+    {
+        abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
+
+        $payment = Payment::findOrFail($paymentId);
+        $payments->markRefunded($payment);
+
+        session()->flash('success', 'Payment marked refunded.');
+        $this->order->refresh();
+    }
+
     public function render()
     {
         return view('livewire.shop.order-detail', [

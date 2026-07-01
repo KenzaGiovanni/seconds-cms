@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Shop;
 
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentProvider;
 use App\Support\CartManager;
 use App\Support\CheckoutService;
+use App\Support\PaymentSettings;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -121,8 +124,14 @@ class Checkout extends Component
 
     public function render(CartManager $cart)
     {
+        $provider = PaymentSettings::provider();
+
         return view('livewire.shop.checkout', [
             'totals' => $cart->totals(),
+            'paymentProvider' => $provider,
+            'paymentMethods' => $provider === PaymentProvider::Xendit
+                ? PaymentSettings::xenditEnabledMethods()
+                : [PaymentMethod::BankTransfer],
         ]);
     }
 }

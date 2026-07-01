@@ -95,22 +95,51 @@
                 @endif
             </div>
 
-            {{-- Payments --}}
+            {{-- Payments timeline --}}
             @if ($order->payments->isNotEmpty())
-                <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-3">
+                <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">
                     <h2 class="font-display text-sm font-semibold text-ink">Payments</h2>
-                    @foreach ($order->payments as $payment)
-                        <div wire:key="payment-{{ $payment->id }}" class="flex items-center justify-between gap-2 text-sm">
-                            <div>
-                                <span class="text-ink">{{ $payment->gateway->label() }}</span>
-                                <span class="text-muted">- {{ $payment->status->label() }}</span>
-                                <div class="text-xs text-muted">{{ $payment->formattedAmount() }}</div>
+                    @foreach ($order->payments->sortByDesc('id') as $payment)
+                        <div wire:key="payment-{{ $payment->id }}" class="space-y-1.5 border-b border-line pb-3 text-sm last:border-0 last:pb-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    <span class="text-ink">{{ $payment->gateway->label() }}</span>
+                                    <span class="text-muted">- {{ $payment->status->label() }}</span>
+                                </div>
+                                <div class="flex shrink-0 gap-2">
+                                    @if ($payment->gateway->value === 'xendit' && $payment->status->value === 'pending')
+                                        <button type="button" wire:click="recheckPayment({{ $payment->id }})"
+                                                class="rounded-[var(--radius-btn)] border border-line px-2 py-1 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                                            Re-check
+                                        </button>
+                                    @endif
+                                    @if ($payment->status->value === 'paid')
+                                        <button type="button" wire:click="refundPayment({{ $payment->id }})"
+                                                wire:confirm="Mark this payment refunded? This only records the state - no refund is issued through the gateway yet."
+                                                class="rounded-[var(--radius-btn)] border border-red-200 px-2 py-1 font-display text-xs font-medium text-red-700 transition hover:bg-red-50">
+                                            Refund
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
-                            @if ($payment->gateway->value === 'xendit' && $payment->status->value === 'pending')
-                                <button type="button" wire:click="recheckPayment({{ $payment->id }})"
-                                        class="shrink-0 rounded-[var(--radius-btn)] border border-line px-2 py-1 font-display text-xs font-medium text-ink transition hover:bg-soft">
-                                    Re-check
-                                </button>
+                            <div class="text-xs text-muted">{{ $payment->formattedAmount() }} &middot; created {{ $payment->created_at->format('d M Y, H:i') }}</div>
+                            @if ($payment->paid_at)
+                                <div class="text-xs text-muted">Paid {{ $payment->paid_at->format('d M Y, H:i') }}</div>
+                            @endif
+                            @if ($payment->proof_uploaded_at)
+                                <div class="text-xs text-muted">
+                                    Proof uploaded {{ $payment->proof_uploaded_at->format('d M Y, H:i') }}
+                                    @if ($payment->payer_reference)
+                                        &middot; ref: {{ $payment->payer_reference }}
+                                    @endif
+                                    <a href="{{ route('admin.shop.payments.proof', $payment->id) }}" target="_blank" class="ml-1 underline">view</a>
+                                </div>
+                            @endif
+                            @if ($payment->verified_at)
+                                <div class="text-xs text-muted">Verified by {{ $payment->verifier?->name ?? 'unknown' }} on {{ $payment->verified_at->format('d M Y, H:i') }}</div>
+                            @endif
+                            @if ($payment->rejection_reason)
+                                <div class="text-xs text-red-700">Rejected: {{ $payment->rejection_reason }}</div>
                             @endif
                         </div>
                     @endforeach
