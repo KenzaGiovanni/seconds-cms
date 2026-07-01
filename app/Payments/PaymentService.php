@@ -34,8 +34,7 @@ class PaymentService
     {
         return match ($provider ?? $this->provider()) {
             PaymentProvider::Manual => app(ManualGateway::class),
-            // Bound in Phase 3.2 when Xendit activation ships.
-            PaymentProvider::Xendit => throw new \RuntimeException('Xendit is not configured yet (Phase 3.2).'),
+            PaymentProvider::Xendit => app(XenditGateway::class),
         };
     }
 

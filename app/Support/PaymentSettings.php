@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentProvider;
 use App\Models\Setting;
 use Illuminate\Support\Carbon;
@@ -50,5 +51,76 @@ class PaymentSettings
             'account_holder' => (string) Setting::get('bank_account_holder', ''),
             'instructions' => (string) Setting::get('bank_instructions', ''),
         ];
+    }
+
+    /** Persist activated Xendit credentials. Blank values are stored as empty strings, not skipped. */
+    public static function setXenditKeys(string $secretKey, string $publicKey, string $webhookToken): void
+    {
+        Setting::set('xendit_secret_key', $secretKey);
+        Setting::set('xendit_public_key', $publicKey);
+        Setting::set('xendit_webhook_token', $webhookToken);
+    }
+
+    /**
+     * Raw Xendit credentials for building requests / verifying webhooks.
+     * Falls back to config/services.php (env) when nothing has been activated yet.
+     *
+     * @return array{secret_key: string, public_key: string, webhook_token: string}
+     */
+    public static function xenditKeys(): array
+    {
+        return [
+            'secret_key' => (string) (Setting::get('xendit_secret_key') ?: config('services.xendit.secret_key', '')),
+            'public_key' => (string) (Setting::get('xendit_public_key') ?: config('services.xendit.public_key', '')),
+            'webhook_token' => (string) (Setting::get('xendit_webhook_token') ?: config('services.xendit.webhook_token', '')),
+        ];
+    }
+
+    /** Last 4 characters only - safe to render in the admin UI. */
+    public static function maskedXenditSecretKey(): ?string
+    {
+        $key = self::xenditKeys()['secret_key'];
+
+        return $key === '' ? null : str_repeat('•', 8).substr($key, -4);
+    }
+
+    public static function xenditBaseUrl(): string
+    {
+        return rtrim((string) config('services.xendit.base_url', 'https://api.xendit.co'), '/');
+    }
+
+    /** @return list<PaymentMethod> Xendit methods the admin has enabled (defaults to all of them). */
+    public static function xenditEnabledMethods(): array
+    {
+        $stored = Setting::get('xendit_enabled_methods');
+
+        if ($stored === null || $stored === '') {
+            return self::allXenditMethods();
+        }
+
+        $methods = array_filter(array_map(
+            fn (string $value) => PaymentMethod::tryFrom($value),
+            explode(',', $stored),
+        ));
+
+        $methods = array_values(array_filter($methods, fn (PaymentMethod $m) => $m->provider() === PaymentProvider::Xendit));
+
+        return $methods ?: self::allXenditMethods();
+    }
+
+    /** @param  list<PaymentMethod>  $methods */
+    public static function setXenditEnabledMethods(array $methods): void
+    {
+        $values = array_map(fn (PaymentMethod $m) => $m->value, $methods);
+        Setting::set('xendit_enabled_methods', implode(',', $values));
+    }
+
+    /** @return list<PaymentMethod> */
+    public static function allXenditMethods(): array
+    {
+        return array_values(array_filter(
+            PaymentMethod::cases(),
+            fn (PaymentMethod $m) => $m->provider() === PaymentProvider::Xendit,
+        ));
     }
 }

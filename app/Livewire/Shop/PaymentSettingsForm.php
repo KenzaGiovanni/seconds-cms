@@ -2,9 +2,12 @@
 
 namespace App\Livewire\Shop;
 
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentProvider;
 use App\Enums\Permission;
 use App\Models\Setting;
 use App\Support\PaymentSettings;
+use Illuminate\Support\Facades\Http;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -23,6 +26,16 @@ class PaymentSettingsForm extends Component
 
     public $windowMinutes = PaymentSettings::DEFAULT_WINDOW_MINUTES;
 
+    // Xendit activation - blank means "keep the existing stored value".
+    public string $xenditSecretKey = '';
+
+    public string $xenditPublicKey = '';
+
+    public string $xenditWebhookToken = '';
+
+    /** @var list<string> */
+    public array $xenditMethods = [];
+
     public function mount(): void
     {
         abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
@@ -33,6 +46,8 @@ class PaymentSettingsForm extends Component
         $this->bankAccountHolder = $details['account_holder'];
         $this->bankInstructions = $details['instructions'];
         $this->windowMinutes = PaymentSettings::windowMinutes();
+
+        $this->xenditMethods = array_map(fn (PaymentMethod $m) => $m->value, PaymentSettings::xenditEnabledMethods());
     }
 
     public function save(): void
@@ -56,8 +71,63 @@ class PaymentSettingsForm extends Component
         session()->flash('success', 'Payment settings saved.');
     }
 
+    public function activateXendit(): void
+    {
+        abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
+
+        $data = $this->validate([
+            'xenditSecretKey' => 'nullable|string|max:255',
+            'xenditPublicKey' => 'nullable|string|max:255',
+            'xenditWebhookToken' => 'nullable|string|max:255',
+            'xenditMethods' => 'required|array|min:1',
+            'xenditMethods.*' => 'in:'.implode(',', array_map(fn (PaymentMethod $m) => $m->value, PaymentSettings::allXenditMethods())),
+        ]);
+
+        $existing = PaymentSettings::xenditKeys();
+        $secretKey = $data['xenditSecretKey'] ?: $existing['secret_key'];
+        $publicKey = $data['xenditPublicKey'] ?: $existing['public_key'];
+        $webhookToken = $data['xenditWebhookToken'] ?: $existing['webhook_token'];
+
+        if ($secretKey === '') {
+            $this->addError('xenditSecretKey', 'Enter a Xendit secret key to activate.');
+
+            return;
+        }
+
+        $response = Http::withBasicAuth($secretKey, '')->get(PaymentSettings::xenditBaseUrl().'/balance');
+
+        if ($response->failed()) {
+            session()->flash('error', 'Could not verify those Xendit keys - check them and try again.');
+
+            return;
+        }
+
+        PaymentSettings::setXenditKeys($secretKey, $publicKey, $webhookToken);
+        PaymentSettings::setXenditEnabledMethods(array_map(fn (string $v) => PaymentMethod::from($v), $data['xenditMethods']));
+        PaymentSettings::setProvider(PaymentProvider::Xendit);
+
+        $this->xenditSecretKey = '';
+        $this->xenditPublicKey = '';
+        $this->xenditWebhookToken = '';
+
+        session()->flash('success', 'Xendit activated - it is now the active payment provider.');
+    }
+
+    public function useManual(): void
+    {
+        abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
+
+        PaymentSettings::setProvider(PaymentProvider::Manual);
+
+        session()->flash('success', 'Switched back to manual bank transfer.');
+    }
+
     public function render()
     {
-        return view('livewire.shop.payment-settings-form');
+        return view('livewire.shop.payment-settings-form', [
+            'provider' => PaymentSettings::provider(),
+            'maskedSecretKey' => PaymentSettings::maskedXenditSecretKey(),
+            'allXenditMethods' => PaymentSettings::allXenditMethods(),
+        ]);
     }
 }

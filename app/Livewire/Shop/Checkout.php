@@ -105,6 +105,17 @@ class Checkout extends Component
         session(['last_order_number' => $order->number]);
 
         $this->dispatch('cart-updated');
+
+        $payment = $order->payments()->latest('id')->first();
+        $redirectUrl = $payment?->raw_payload['invoice_url'] ?? null;
+
+        if ($redirectUrl) {
+            // Xendit hosted checkout - off-site, so no wire:navigate.
+            $this->redirect($redirectUrl);
+
+            return;
+        }
+
         $this->redirect(route('order.confirmation', $order->number), navigate: true);
     }
 

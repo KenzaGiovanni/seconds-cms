@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    // Called directly via the Http facade (App\Payments\XenditGateway) - see
+    // seconds-spec.md §14 for why this isn't the xendit/xendit-php SDK.
+    // Env values are fallback defaults; the keys admins actually activate
+    // with are entered in Shop > Payments and persisted via PaymentSettings.
+    'xendit' => [
+        'base_url' => env('XENDIT_BASE_URL', 'https://api.xendit.co'),
+        'secret_key' => env('XENDIT_SECRET_KEY'),
+        'public_key' => env('XENDIT_PUBLIC_KEY'),
+        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
+    ],
+
 ];
