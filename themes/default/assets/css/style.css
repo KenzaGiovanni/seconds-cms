@@ -900,8 +900,71 @@
             padding: 0.375rem 1.5rem;
         }
         .cart-summary-line--discount { color: var(--accent); }
+        .cart-summary-line--muted { color: var(--muted); }
         .checkout-summary-row--discount { color: var(--accent); }
         .checkout-coupon { margin: 1.25rem 0; }
+
+        /* --- Cart layout: products left, summary right --- */
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 2.5rem;
+            align-items: start;
+            padding-bottom: 3rem;
+        }
+        @media (max-width: 860px) {
+            .cart-layout { grid-template-columns: 1fr; gap: 2rem; }
+        }
+        .cart-products .cart-table { margin-bottom: 1.25rem; }
+        .cart-continue-link {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9375rem;
+            color: var(--muted);
+        }
+        .cart-continue-link:hover { color: var(--accent); text-decoration: none; }
+
+        .cart-summary-panel {
+            background: var(--soft);
+            border-radius: var(--radius-card);
+            padding: 1.75rem;
+            position: sticky;
+            top: 6rem;
+        }
+        .cart-summary-heading { font-size: 1.125rem; margin: 0 0 1.25rem; }
+        .cart-summary-panel .cart-coupon { margin: 0 0 1.25rem; }
+        .cart-summary-panel .cart-coupon-form,
+        .cart-summary-panel .cart-coupon-applied { max-width: none; }
+        .cart-summary-panel .cart-summary-lines { margin: 0 0 1rem; }
+        .cart-summary-panel .cart-summary-line { padding: 0.375rem 0; }
+        .cart-summary-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 1rem 0 1.25rem;
+            border-top: 1px solid var(--line);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .cart-summary-panel .btn-add-to-cart { width: 100%; }
+
+        /* --- Checkout: delivery + payment option cards (UI only for now) --- */
+        .checkout-options { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 0.5rem; }
+        .checkout-option {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.875rem 1rem;
+            background: var(--soft);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+        }
+        .checkout-option input { margin: 0; accent-color: var(--accent); }
+        .checkout-option-body { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+        .checkout-option-title { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 0.9375rem; color: var(--ink); }
+        .checkout-option-sub { font-size: 0.8125rem; color: var(--muted); }
+        .checkout-option-price { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 0.9375rem; color: var(--ink); }
+        .checkout-option--selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+        .checkout-option--disabled { opacity: 0.55; cursor: not-allowed; }
 
         /* --- Checkout --- */
         .checkout-grid {
@@ -969,3 +1032,18 @@
 
         .order-confirmation-address { margin-top: 2.5rem; }
         .order-confirmation-address p { color: var(--muted); }
+
+        .order-payment-panel { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 2rem; }
+        .order-payment-details p { color: var(--muted); margin: 0.25rem 0; }
+        .order-payment-countdown { font-weight: 500; color: var(--ink) !important; margin-top: 0.75rem !important; }
+        .order-payment-notice {
+            background: var(--soft);
+            border-radius: var(--radius-btn, 6px);
+            padding: 0.875rem 1rem;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+        }
+        .order-payment-notice--success { background: #ecfdf5; color: #065f46; }
+        .order-payment-notice--error { background: #fef2f2; color: #991b1b; }
+        .order-payment-note { font-size: 0.8125rem; color: var(--muted); }
+        .order-payment-upload-form { margin-top: 1.5rem; }

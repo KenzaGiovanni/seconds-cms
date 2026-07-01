@@ -6,21 +6,23 @@ use App\Enums\OrderStatus;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Promotion;
+use App\Payments\PaymentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Converts the current cart into an order: snapshots price/name/options onto
  * OrderItem rows (so later catalog edits never change a past order), decrements
- * stock, applies any promotion/coupon discount, and moves the order to
- * awaiting_payment. Payment itself is Phase 3 - for now every order simply waits
- * for a manual "mark paid".
+ * stock, applies any promotion/coupon discount, moves the order to
+ * awaiting_payment, and initiates payment through the active gateway (manual
+ * bank transfer by default - Phase 3.1).
  */
 class CheckoutService
 {
     public function __construct(
         private CartManager $cartManager,
         private DiscountCalculator $discounts,
+        private PaymentService $payments,
     ) {}
 
     /**
@@ -81,6 +83,7 @@ class CheckoutService
             $order->recalculateTotals();
             $order->save();
             $order->transitionTo(OrderStatus::AwaitingPayment);
+            $this->payments->initiate($order);
 
             $cart->items()->delete();
             $this->cartManager->removeCoupon();

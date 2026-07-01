@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\FrontController;
+use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\ThemeAssetController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Content\PageForm;
@@ -19,6 +20,8 @@ use App\Livewire\Menus\MenuList;
 use App\Livewire\Settings\WebsiteSettings;
 use App\Livewire\Shop\OrderDetail;
 use App\Livewire\Shop\OrderList;
+use App\Livewire\Shop\PaymentSettingsForm;
+use App\Livewire\Shop\PaymentVerificationList;
 use App\Livewire\Shop\ProductCategoryForm;
 use App\Livewire\Shop\ProductCategoryList;
 use App\Livewire\Shop\ProductForm;
@@ -188,6 +191,13 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
             Route::get('/', PromotionList::class)->name('index');
             Route::get('/create', PromotionForm::class)->name('create');
             Route::get('/{id}/edit', PromotionForm::class)->name('edit');
+        });
+
+        // Payments — manual verification queue + settings.
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', PaymentVerificationList::class)->name('index');
+            Route::get('/settings', PaymentSettingsForm::class)->name('settings');
+            Route::get('/{payment}/proof', [PaymentProofController::class, 'show'])->name('proof');
         });
     });
 });

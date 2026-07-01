@@ -45,5 +45,35 @@
             <p>{{ $order->shipping_address['address_line'] ?? '' }}</p>
             <p>{{ $order->shipping_address['city'] ?? '' }}, {{ $order->shipping_address['postal_code'] ?? '' }}</p>
         </div>
+
+        @if ($order->status->value === 'awaiting_payment')
+            @livewire('shop.proof-upload', ['order' => $order])
+
+            <script>
+                document.addEventListener('livewire:navigated', function () {
+                    document.querySelectorAll('.order-payment-countdown[data-due-at]').forEach(function (el) {
+                        var dueAt = new Date(el.dataset.dueAt).getTime();
+                        var base = el.textContent.trim();
+                        var timer;
+
+                        var tick = function () {
+                            var diff = dueAt - Date.now();
+                            if (diff <= 0) {
+                                el.textContent = base + ' (window closed)';
+                                clearInterval(timer);
+                                return;
+                            }
+                            var mins = Math.floor(diff / 60000);
+                            var hrs = Math.floor(mins / 60);
+                            var remMins = mins % 60;
+                            el.textContent = base + ' (' + (hrs > 0 ? hrs + 'h ' : '') + remMins + 'm remaining)';
+                        };
+
+                        tick();
+                        timer = setInterval(tick, 30000);
+                    });
+                });
+            </script>
+        @endif
     </div>
 @endsection

@@ -44,6 +44,47 @@
                 <label>Order notes <span class="optional">(optional)</span></label>
                 <textarea wire:model="notes" rows="3"></textarea>
             </div>
+
+            {{-- Delivery method (UI only - wired in Phase 4, KiriminAja live rates) --}}
+            <h2 class="checkout-heading">Delivery method</h2>
+            <div class="checkout-options" aria-label="Delivery method">
+                <label class="checkout-option checkout-option--selected">
+                    <input type="radio" name="delivery" checked disabled>
+                    <span class="checkout-option-body">
+                        <span class="checkout-option-title">Standard delivery</span>
+                        <span class="checkout-option-sub">Live courier rates appear here once delivery is connected</span>
+                    </span>
+                    <span class="checkout-option-price">-</span>
+                </label>
+                <label class="checkout-option checkout-option--disabled">
+                    <input type="radio" name="delivery" disabled>
+                    <span class="checkout-option-body">
+                        <span class="checkout-option-title">Instant / same-day</span>
+                        <span class="checkout-option-sub">Coming soon</span>
+                    </span>
+                    <span class="checkout-option-price">-</span>
+                </label>
+            </div>
+            <p class="checkout-note">Courier options and live rates are added in the delivery module - shown here for layout only.</p>
+
+            {{-- Payment method: manual bank transfer is live (Phase 3.1); Xendit methods arrive in 3.2 --}}
+            <h2 class="checkout-heading">Payment method</h2>
+            <div class="checkout-options" aria-label="Payment method">
+                <label class="checkout-option checkout-option--selected">
+                    <input type="radio" name="payment" checked disabled>
+                    <span class="checkout-option-body">
+                        <span class="checkout-option-title">Bank transfer</span>
+                        <span class="checkout-option-sub">Bank details + a proof-of-payment upload shown after you place the order</span>
+                    </span>
+                </label>
+                <label class="checkout-option checkout-option--disabled">
+                    <input type="radio" name="payment" disabled>
+                    <span class="checkout-option-body">
+                        <span class="checkout-option-title">Virtual Account / QRIS / E-wallet / Card</span>
+                        <span class="checkout-option-sub">Available once Xendit is activated</span>
+                    </span>
+                </label>
+            </div>
         </div>
 
         <div class="checkout-summary">
@@ -81,7 +122,7 @@
                 @endif
             </div>
 
-            <p class="checkout-note">Shipping and payment are arranged after checkout (payment provider integration coming soon).</p>
+            <p class="checkout-note">Shipping is arranged after checkout. Bank transfer details and a proof-of-payment upload appear on your order confirmation page.</p>
             <button type="submit" class="btn-add-to-cart">Place order</button>
         </div>
     </form>

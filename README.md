@@ -116,11 +116,23 @@ The default theme header shows a persistent **Shop** link (next to the mini-cart
 
 A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by user once logged in (no merge-on-login yet - a guest cart doesn't currently follow you into an account). Add to cart from the product detail widget (variant-aware, respects each product's stock policy); a header mini-cart badge and the `/cart` page both update live via a `cart-updated` browser event, no full page reload needed to see quantity/total changes.
 
+The `/cart` page is a two-column layout: line items on the left, a sticky **order summary** panel on the right (coupon, subtotal, discount, a "shipping calculated at checkout" line, and the total) with the proceed-to-checkout action.
+
 ### Checkout + orders
 
 `/checkout` collects contact + shipping details (guest checkout - no account required) and places the order via `App\Support\CheckoutService`, which snapshots product name/sku/price/options onto each order line (later catalog edits never rewrite past orders), decrements stock, and moves the order to `awaiting_payment`. The customer lands on `/order/{number}` - that confirmation page checks ownership (account match, or a session flag set right after checkout) rather than trusting the order number alone, since order numbers aren't secret.
 
+The checkout page also shows **delivery method** and **payment method** selectors. Delivery is still a **UI-only placeholder** (live courier rates arrive with the delivery module, Phase 4). Payment method now has one live option, **bank transfer** (Phase 3.1) - Xendit's VA/QRIS/e-wallet/card show as "available once activated" until 3.2.
+
 Admins manage orders at `/admin/shop/orders` (`orders.manage` permission): a list with status pills, and a detail screen showing line items, shipping address, totals, and status-transition buttons limited to whatever `OrderStatus::transitions()` allows next. Cancelling an order that was `awaiting_payment` or `paid` automatically restocks its line items.
+
+### Storefront UI ownership (planned split)
+
+Ecommerce is a module ("extension"), not part of any single theme. Its UI is designed in two tiers so swapping themes never breaks a functional flow: **module-owned** (cart, checkout, customer portal, order confirmation - consistent on every theme) vs **theme-owned** (shop index, category, product detail - designed per theme). Today cart/checkout/order-confirmation still physically live in `themes/default/views/`; moving them into module-owned views is a Phase 5 refactor. See `seconds-spec.md` §5.1.
+
+### Customer portal (designed, not built)
+
+A logged-in **customer portal** (`/account`: order history + status, saved addresses, profile) is designed - see the mockup at `design/moodboards/customer-portal.html`. Customers get **real accounts** (public registration/login, separate from staff), with guest checkout still allowed and "create account" offered at the end. It is built as its own phase **after Phase 3 payments**, since order status is only meaningful once payments are real.
 
 ### Inventory + order-management polish
 
@@ -252,7 +264,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, and Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish) are all **complete**. Phase 3 (Xendit payments) is next. Test suite: **292/292 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, and Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish) are all **complete**. Phase 3 (Payments) is **in progress** - the gateway contract + payment state machine + order-expiry model (3.0) and the manual bank-transfer flow (3.1) have landed; Xendit activation is next. Test suite: **378/378 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -273,15 +285,21 @@ What's shipped:
 - **Cart** (2.3): session/user-keyed db-backed cart, add/update/remove, stock-checked, live mini-cart + cart page - see "Cart" above
 - **Checkout + orders** (2.4): guest-friendly checkout, order snapshotting, stock decrement, admin order list/detail with guarded status transitions + restock-on-cancel - see "Checkout + orders" above
 - **Inventory + order-management polish** (2.5): manual stock adjustment, shared low-stock threshold across admin + storefront, stubbed order emails - see "Inventory + order-management polish" above
+- **Payment gateway contract + state machine** (3.0): a `PaymentGateway` interface with a first-class `ManualGateway` (bank transfer), a `payments` table, and `PaymentService` - the single row-locked, monotonic path every "mark paid" flows through (admin confirmation, webhook, reconcile), so payments are idempotent and out-of-order-safe. A configurable payment window (default 120 min) stamps `payment_due_at`; the `payments:expire` command (scheduled every minute) cancels orders the customer hasn't acted on and returns their stock. The clock stops once a customer uploads proof (`submitted`) or pays.
+- **Manual bank-transfer flow** (3.1): checkout now calls `PaymentService::initiate()` on every order, creating a pending payment and stamping the payment window. The order confirmation page shows the bank details, a live countdown to `payment_due_at`, and a proof-of-payment upload form (image/PDF, private disk, owner-gated). Admins configure bank details + the payment window at `/admin/shop/payments/settings`, and work a **verification queue** at `/admin/shop/payments` (`orders.manage`) to confirm (order -> paid) or reject (back to pending, with a reason) submitted proof.
+
+### Payments (in progress)
+
+Two modes behind one interface, chosen by a `payment_provider` setting: **manual bank transfer** (default, live now - customer uploads proof, admin verifies) and **Xendit** (opt-in, unlocks VA/QRIS/e-wallet/card, not yet built). Both share the payment-window expiry above. Xendit activation/webhooks and the combined payments admin UI are the remaining Phase 3 slices - see `seconds-spec.md` §18.
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
 3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **DONE** (2.0-2.5 all shipped).
-4. **Phase 3** - Payments (Xendit) - **NEXT**.
+4. **Phase 3** - Payments (manual bank transfer + Xendit) - **IN PROGRESS** (3.0 gateway contract + state machine + expiry, 3.1 manual bank-transfer flow done; Xendit next).
 5. **Phase 4** - Delivery (KiriminAja).
-6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.
+6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs, **storefront UI ownership refactor** (module-owned cart/checkout/portal/confirmation), and the **customer accounts + portal** build-out.
 
 ## License
 

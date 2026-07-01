@@ -112,6 +112,10 @@
                                @class([$navItem, $navActive => request()->routeIs('admin.shop.orders.*'), $navIdle => ! request()->routeIs('admin.shop.orders.*')])>
                                 Orders
                             </a>
+                            <a href="{{ route('admin.shop.payments.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.payments.*'), $navIdle => ! request()->routeIs('admin.shop.payments.*')])>
+                                Payments
+                            </a>
                         @endcan
                         @can(\App\Enums\Permission::PromotionsManage->value)
                             <a href="{{ route('admin.shop.promotions.index') }}"
