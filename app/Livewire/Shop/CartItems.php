@@ -14,10 +14,39 @@ class CartItems extends Component
 {
     public ?string $errorMessage = null;
 
+    public string $couponInput = '';
+
+    public ?string $couponMessage = null;
+
     #[On('cart-updated')]
     public function refresh(): void
     {
         // Re-render only; state is recomputed in render() from the DB.
+    }
+
+    public function applyCoupon(CartManager $cart): void
+    {
+        $this->couponMessage = null;
+
+        if (trim($this->couponInput) === '') {
+            return;
+        }
+
+        $result = $cart->applyCoupon($this->couponInput);
+
+        if ($result->hasDiscount()) {
+            $this->couponInput = '';
+            $this->dispatch('cart-updated');
+        } else {
+            $this->couponMessage = 'That code is not valid for your cart.';
+        }
+    }
+
+    public function removeCoupon(CartManager $cart): void
+    {
+        $cart->removeCoupon();
+        $this->couponMessage = null;
+        $this->dispatch('cart-updated');
     }
 
     public function updateQuantity(CartManager $cart, int $itemId, int $quantity): void

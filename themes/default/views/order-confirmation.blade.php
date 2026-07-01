@@ -22,6 +22,19 @@
             @endforeach
         </div>
 
+        <div class="cart-summary-lines">
+            <div class="cart-summary-line">
+                <span>Subtotal</span>
+                <span>{{ \App\Support\Money::format($order->subtotal, $order->currency) }}</span>
+            </div>
+            @if ($order->discount_total > 0)
+                <div class="cart-summary-line cart-summary-line--discount">
+                    <span>Discount{{ $order->coupon_code ? ' ('.$order->coupon_code.')' : '' }}</span>
+                    <span>- {{ \App\Support\Money::format($order->discount_total, $order->currency) }}</span>
+                </div>
+            @endif
+        </div>
+
         <div class="cart-summary">
             <span class="cart-summary-label">Total</span>
             <span class="cart-summary-total">{{ $order->formattedTotal() }}</span>

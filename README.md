@@ -128,6 +128,12 @@ The admin product list shows stock **read-only** (edit stock on the product form
 
 **Stock reservation model.** Placing an order decrements ("reserves") stock immediately, at checkout. Paying keeps it reserved; cancelling an order that was `awaiting_payment` or `paid` returns the stock. This restock-on-cancel lives in `Order::transitionTo()`, so every path that cancels an order - admin action now, payment webhooks/expiry later - restores inventory automatically.
 
+### Promotions & coupons
+
+`/admin/shop/promotions` (`promotions.manage`) manages discounts. A promotion is **automatic** (applied to any qualifying cart) or a **coupon** (needs a code), and discounts **per item** across the whole cart by a **percentage** or a **fixed amount**. Rules: a minimum-items threshold to qualify, a per-order cap on how many items get discounted (extras are full price), a global quota counted in discounted **units**, an active date range, allowed days of the week, and a daily time window (e.g. a 4-8pm happy hour). Coupon promotions hold any number of codes, each with its own redemption limit; codes can be added one at a time or **mass-generated** in a batch (count, optional prefix, per-code use limit).
+
+`App\Support\DiscountCalculator` is the engine: it computes the best single discount for a cart (automatic promos and an entered coupon all compete - **best wins, never stacked**), discounting the highest-priced units first. At checkout the winning promotion row is **locked** while its quota and the coupon's use count are consumed, so the quota isn't oversold under normal concurrency; cancelling an order releases both back (via `Order::transitionTo`, alongside restock). Customers apply a coupon on the cart or checkout page and see the discount and new total live.
+
 ### See it: the demo shop
 
 The ecommerce toggle is **off by default** - with it off, `/shop`, `/cart`, `/checkout`, and the admin "Shop" sidebar section are all correctly hidden/404 (that's the toggle working, not a bug). Turn it on at **Website Settings > Shop** (`/admin/settings`), or seed demo content which flips it on for you:

@@ -29,12 +29,37 @@ class Checkout extends Component
 
     public ?string $errorMessage = null;
 
+    public string $couponInput = '';
+
+    public ?string $couponMessage = null;
+
     public function mount(): void
     {
         if (Auth::check()) {
             $this->email = Auth::user()->email;
             $this->name = Auth::user()->name;
         }
+    }
+
+    public function applyCoupon(CartManager $cart): void
+    {
+        $this->couponMessage = null;
+
+        if (trim($this->couponInput) === '') {
+            return;
+        }
+
+        if ($cart->applyCoupon($this->couponInput)->hasDiscount()) {
+            $this->couponInput = '';
+        } else {
+            $this->couponMessage = 'That code is not valid for your cart.';
+        }
+    }
+
+    public function removeCoupon(CartManager $cart): void
+    {
+        $cart->removeCoupon();
+        $this->couponMessage = null;
     }
 
     public function placeOrder(CartManager $cart, CheckoutService $checkout): void

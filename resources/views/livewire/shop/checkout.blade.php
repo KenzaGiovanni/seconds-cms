@@ -52,10 +52,35 @@
                 <span>Subtotal ({{ $totals['itemCount'] }} items)</span>
                 <span>{{ $totals['formatted'] }}</span>
             </div>
+            @if ($totals['discount'] > 0)
+                <div class="checkout-summary-row checkout-summary-row--discount">
+                    <span>Discount{{ $totals['discountLabel'] ? ' - '.$totals['discountLabel'] : '' }}</span>
+                    <span>- {{ $totals['discountFormatted'] }}</span>
+                </div>
+            @endif
             <div class="checkout-summary-row checkout-summary-row--total">
                 <span>Total</span>
-                <span>{{ $totals['formatted'] }}</span>
+                <span>{{ $totals['totalFormatted'] }}</span>
             </div>
+
+            {{-- Coupon --}}
+            <div class="checkout-coupon">
+                @if ($totals['couponCode'])
+                    <div class="cart-coupon-applied">
+                        <span>Coupon <strong>{{ $totals['couponCode'] }}</strong></span>
+                        <button type="button" wire:click="removeCoupon" class="cart-remove-btn">Remove</button>
+                    </div>
+                @else
+                    <div class="cart-coupon-form">
+                        <input type="text" wire:model="couponInput" placeholder="Coupon code" class="qty-input cart-coupon-input">
+                        <button type="button" wire:click="applyCoupon" class="cart-coupon-btn">Apply</button>
+                    </div>
+                    @if ($couponMessage)
+                        <p class="cart-feedback cart-feedback--error">{{ $couponMessage }}</p>
+                    @endif
+                @endif
+            </div>
+
             <p class="checkout-note">Shipping and payment are arranged after checkout (payment provider integration coming soon).</p>
             <button type="submit" class="btn-add-to-cart">Place order</button>
         </div>

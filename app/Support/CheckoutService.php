@@ -3,19 +3,25 @@
 namespace App\Support;
 
 use App\Enums\OrderStatus;
+use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\Promotion;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Converts the current cart into an order: snapshots price/name/options onto
  * OrderItem rows (so later catalog edits never change a past order), decrements
- * stock, and moves the order to awaiting_payment. Payment itself is Phase 3 -
- * for now every order simply waits for a manual "mark paid" (Phase 2.5/3).
+ * stock, applies any promotion/coupon discount, and moves the order to
+ * awaiting_payment. Payment itself is Phase 3 - for now every order simply waits
+ * for a manual "mark paid".
  */
 class CheckoutService
 {
-    public function __construct(private CartManager $cartManager) {}
+    public function __construct(
+        private CartManager $cartManager,
+        private DiscountCalculator $discounts,
+    ) {}
 
     /**
      * @param  array{name: string, email: string, phone?: string}  $customer
@@ -29,7 +35,9 @@ class CheckoutService
             throw new \RuntimeException('Your cart is empty.');
         }
 
-        return DB::transaction(function () use ($cart, $customer, $shippingAddress, $notes) {
+        $couponCode = $this->cartManager->couponCode();
+
+        return DB::transaction(function () use ($cart, $customer, $shippingAddress, $notes, $couponCode) {
             $order = Order::create([
                 'status' => OrderStatus::Pending,
                 'user_id' => Auth::id(),
@@ -69,14 +77,69 @@ class CheckoutService
             }
 
             $order->load('items');
+            $this->applyDiscount($order, $cart, $couponCode);
             $order->recalculateTotals();
             $order->save();
             $order->transitionTo(OrderStatus::AwaitingPayment);
 
             $cart->items()->delete();
+            $this->cartManager->removeCoupon();
 
             // Order confirmation email is stubbed until mail is configured (matches Forms module convention).
             return $order;
         });
+    }
+
+    /**
+     * Recompute the discount against a row-locked promotion (so the global quota
+     * can't be oversold under normal concurrency), snapshot it onto the order,
+     * and consume the promotion quota + coupon use. The lock serialises
+     * concurrent checkouts on the same promotion.
+     */
+    private function applyDiscount(Order $order, $cart, ?string $couponCode): void
+    {
+        $lines = $cart->items->map(fn ($item) => [
+            'price' => $item->unitPrice(),
+            'qty' => (int) $item->quantity,
+        ])->all();
+
+        // Who won (auto vs coupon), before locking.
+        $winner = $this->discounts->calculate($lines, $couponCode);
+        if (! $winner->hasDiscount() || ! $winner->promotion) {
+            return;
+        }
+
+        $promo = Promotion::whereKey($winner->promotion->id)->lockForUpdate()->first();
+        if (! $promo || ! $promo->isActiveNow()) {
+            return;
+        }
+
+        $coupon = null;
+        if ($winner->coupon) {
+            $coupon = Coupon::whereKey($winner->coupon->id)->lockForUpdate()->first();
+            if (! $coupon || ! $coupon->hasUsesLeft()) {
+                return;
+            }
+        }
+
+        // Recompute with the freshest quota now that the row is locked.
+        $applied = $this->discounts->computeForPromotion($promo, $coupon, $lines);
+        if (! $applied->hasDiscount()) {
+            return;
+        }
+
+        $order->discount_total = $applied->discountTotal;
+        $order->promotion_id = $promo->id;
+        $order->coupon_id = $coupon?->id;
+        $order->coupon_code = $coupon?->code;
+        $order->discount_units = $applied->discountUnits;
+
+        $promo->usage_count += $applied->discountUnits;
+        $promo->save();
+
+        if ($coupon) {
+            $coupon->used_count += 1;
+            $coupon->save();
+        }
     }
 }

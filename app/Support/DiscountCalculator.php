@@ -49,7 +49,7 @@ class DiscountCalculator
         $best = DiscountResult::none();
 
         foreach ($candidates as $candidate) {
-            $result = $this->computeFor($candidate['promotion'], $candidate['coupon'], $lines);
+            $result = $this->computeForPromotion($candidate['promotion'], $candidate['coupon'], $lines);
             if ($result->discountTotal > $best->discountTotal) {
                 $best = $result;
             }
@@ -59,10 +59,19 @@ class DiscountCalculator
     }
 
     /**
+     * Discount a single promotion (+ optional coupon) would give this cart.
+     * Public so checkout can re-run it against a row-locked promotion to apply
+     * the freshest quota. Assumes the promotion is already known to be live.
+     *
      * @param  array<int, array{price: int, qty: int}>  $lines
      */
-    private function computeFor(Promotion $promo, ?Coupon $coupon, array $lines): DiscountResult
+    public function computeForPromotion(Promotion $promo, ?Coupon $coupon, array $lines): DiscountResult
     {
+        $lines = array_values(array_filter($lines, fn ($l) => $l['qty'] > 0));
+        if ($lines === []) {
+            return DiscountResult::none();
+        }
+
         $totalQty = array_sum(array_column($lines, 'qty'));
 
         // Minimum-items threshold.

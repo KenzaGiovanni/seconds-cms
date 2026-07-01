@@ -16,6 +16,7 @@ class Order extends Model
         'number', 'status', 'user_id', 'email', 'customer_name', 'phone',
         'shipping_address', 'billing_address',
         'subtotal', 'shipping_total', 'discount_total', 'total', 'currency', 'notes',
+        'promotion_id', 'coupon_id', 'coupon_code', 'discount_units',
         'placed_at', 'paid_at', 'fulfilled_at', 'completed_at', 'cancelled_at',
     ];
 
@@ -27,6 +28,7 @@ class Order extends Model
         'shipping_total' => 'integer',
         'discount_total' => 'integer',
         'total' => 'integer',
+        'discount_units' => 'integer',
         'placed_at' => 'datetime',
         'paid_at' => 'datetime',
         'fulfilled_at' => 'datetime',
@@ -68,6 +70,7 @@ class Order extends Model
         // it for free. `shouldRestockOnCancel()` reflects the state being LEFT.
         if ($to === OrderStatus::Cancelled && $this->status->shouldRestockOnCancel()) {
             $this->restockItems();
+            $this->releasePromotion();
         }
 
         $this->status = $to;
@@ -97,6 +100,26 @@ class Order extends Model
         }
     }
 
+    /** Give back the promotion quota + coupon use this order consumed. */
+    protected function releasePromotion(): void
+    {
+        if ($this->promotion_id && $this->discount_units > 0) {
+            $promo = Promotion::find($this->promotion_id);
+            if ($promo) {
+                $promo->usage_count = max(0, $promo->usage_count - $this->discount_units);
+                $promo->save();
+            }
+        }
+
+        if ($this->coupon_id) {
+            $coupon = Coupon::find($this->coupon_id);
+            if ($coupon) {
+                $coupon->used_count = max(0, $coupon->used_count - 1);
+                $coupon->save();
+            }
+        }
+    }
+
     public function canTransitionTo(OrderStatus $to): bool
     {
         return $this->status->canTransitionTo($to);
@@ -106,7 +129,9 @@ class Order extends Model
     public function recalculateTotals(): void
     {
         $this->subtotal = (int) $this->items->sum('line_total');
-        $this->total = $this->subtotal + (int) $this->shipping_total - (int) $this->discount_total;
+        $this->discount_total = (int) $this->discount_total;
+        $this->shipping_total = (int) $this->shipping_total;
+        $this->total = $this->subtotal + $this->shipping_total - $this->discount_total;
     }
 
     public function formattedTotal(): string

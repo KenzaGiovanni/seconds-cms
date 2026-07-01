@@ -36,9 +36,40 @@
             @endforeach
         </div>
 
+        {{-- Coupon --}}
+        <div class="cart-coupon">
+            @if ($totals['couponCode'])
+                <div class="cart-coupon-applied">
+                    <span>Coupon <strong>{{ $totals['couponCode'] }}</strong> applied</span>
+                    <button type="button" wire:click="removeCoupon" class="cart-remove-btn">Remove</button>
+                </div>
+            @else
+                <div class="cart-coupon-form">
+                    <input type="text" wire:model="couponInput" placeholder="Coupon code" class="qty-input cart-coupon-input">
+                    <button type="button" wire:click="applyCoupon" class="cart-coupon-btn">Apply</button>
+                </div>
+                @if ($couponMessage)
+                    <p class="cart-feedback cart-feedback--error">{{ $couponMessage }}</p>
+                @endif
+            @endif
+        </div>
+
+        <div class="cart-summary-lines">
+            <div class="cart-summary-line">
+                <span>Subtotal</span>
+                <span>{{ $totals['formatted'] }}</span>
+            </div>
+            @if ($totals['discount'] > 0)
+                <div class="cart-summary-line cart-summary-line--discount">
+                    <span>Discount{{ $totals['discountLabel'] ? ' - '.$totals['discountLabel'] : '' }}</span>
+                    <span>- {{ $totals['discountFormatted'] }}</span>
+                </div>
+            @endif
+        </div>
+
         <div class="cart-summary">
-            <span class="cart-summary-label">Subtotal</span>
-            <span class="cart-summary-total">{{ $totals['formatted'] }}</span>
+            <span class="cart-summary-label">Total</span>
+            <span class="cart-summary-total">{{ $totals['totalFormatted'] }}</span>
         </div>
 
         <div class="cart-checkout-link">
