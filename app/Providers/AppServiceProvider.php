@@ -54,5 +54,10 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('form', function (string $expression) {
             return "<?php echo \App\Support\FormRenderer::render({$expression}); ?>";
         });
+
+        // @themeAsset('css/style.css') — public URL for a file in the active theme's assets/.
+        Blade::directive('themeAsset', function (string $expression) {
+            return "<?php echo app(\App\Support\ThemeManager::class)->assetUrl({$expression}); ?>";
+        });
     }
 }

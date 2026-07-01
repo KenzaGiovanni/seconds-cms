@@ -148,12 +148,16 @@ A theme is a folder under `themes/<slug>/`:
 
 ```
 themes/default/
-  theme.json        # manifest: slug, name, version, supports, settings schema
-  views/            # Blade templates
-  assets/           # css / js / images
+  theme.json            # manifest: slug, name, version, supports, settings schema
+  views/                # Blade templates
+  assets/css/style.css  # the theme stylesheet (+ any js / images under assets/)
 ```
 
 The active theme's views are registered under the `theme::` Blade namespace by `App\Support\ThemeManager`. The default theme is always registered as the base/fallback and the active theme is prepended so its templates override it. Exactly one theme is active at a time; activating one deactivates the rest in a transaction, and the active theme cannot be uninstalled. A theme's effective settings are resolved by `App\Support\ThemeSettings` - `theme.json` defaults merged with stored overrides.
+
+### Theme assets (WordPress-style `style.css`)
+
+A theme's CSS/JS/images live in its own `assets/` folder and are enqueued from Blade with the `@themeAsset('css/style.css')` directive - which resolves to `/themes/<active-slug>/assets/css/style.css?v=<mtime>`. That URL is served by `ThemeAssetController`, path-jailed with `realpath` to the theme's `assets/` folder and limited to a whitelist of static extensions (css/js/images/fonts), so a crafted path can't escape the theme. The `?v=<mtime>` cache-buster means edits (including live ones through the in-admin theme code editor) show up immediately. Only the tiny bit of genuinely dynamic CSS - the accent colour from the theme's `primary_color` setting - stays inline in the layout `<head>`, overriding the stylesheet's defaults; everything else is in `style.css`.
 
 ### Two kinds of settings
 

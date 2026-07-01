@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\FrontController;
+use App\Http\Controllers\ThemeAssetController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Content\PageForm;
 use App\Livewire\Content\PageList;
@@ -30,6 +31,12 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+// Theme static assets (css/js/images), path-jailed to themes/<slug>/assets/.
+Route::get('/themes/{slug}/assets/{path}', [ThemeAssetController::class, 'show'])
+    ->where('slug', '[a-z0-9][a-z0-9\-]*')
+    ->where('path', '.*')
+    ->name('theme.asset');
 
 // Front-end: home + blog routes (MUST come before the page catch-all).
 Route::get('/', [FrontController::class, 'home'])->name('home');

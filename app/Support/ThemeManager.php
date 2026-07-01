@@ -21,6 +21,27 @@ class ThemeManager
         return Theme::active();
     }
 
+    /**
+     * Public URL for a static asset inside a theme's `assets/` folder, e.g.
+     * assetUrl('css/style.css') -> "/themes/default/assets/css/style.css?v=<mtime>".
+     * Defaults to the active theme (falls back to 'default'). A filemtime
+     * cache-buster means live edits (theme code editor) show up immediately.
+     */
+    public function assetUrl(string $path, ?string $slug = null): string
+    {
+        $slug ??= $this->active()?->slug ?? 'default';
+        $path = ltrim($path, '/');
+
+        $url = url("themes/{$slug}/assets/{$path}");
+
+        $full = $this->themesPath($slug).'/assets/'.$path;
+        if (is_file($full)) {
+            $url .= '?v='.filemtime($full);
+        }
+
+        return $url;
+    }
+
     public function activeManifest(): ?ThemeManifest
     {
         $theme = $this->active();
