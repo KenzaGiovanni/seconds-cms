@@ -50,23 +50,23 @@
                             </td>
                             <td class="px-4 py-3">
                                 @if ($product->stock_policy->value === 'none')
-                                    <span class="text-xs text-muted">N/A</span>
+                                    <span class="text-xs text-muted">Not tracked</span>
                                 @elseif ($product->isSimple())
-                                    <div class="flex items-center gap-1.5">
-                                        <input type="number" min="0"
-                                               wire:model="stockEdits.{{ $product->id }}"
-                                               value="{{ $stockEdits[$product->id] ?? $product->stock ?? 0 }}"
-                                               class="w-16 rounded border border-line bg-soft px-1.5 py-1 text-xs text-ink">
-                                        <button wire:click="adjustStock({{ $product->id }})"
-                                                class="text-xs font-medium text-accent hover:underline">Save</button>
-                                        @if (($product->stock ?? 0) <= 0)
-                                            <span class="text-xs font-medium text-red-600">out</span>
-                                        @elseif (($product->stock ?? 0) <= $lowStockThreshold)
-                                            <span class="text-xs font-medium text-yellow-600">low</span>
-                                        @endif
-                                    </div>
+                                    @php $stock = $product->stock ?? 0; @endphp
+                                    <span @class([
+                                        'text-sm font-medium',
+                                        'text-red-600' => $stock <= 0,
+                                        'text-yellow-600' => $stock > 0 && $stock <= $lowStockThreshold,
+                                        'text-ink' => $stock > $lowStockThreshold,
+                                    ])>{{ $stock }}</span>
+                                    @if ($stock <= 0)
+                                        <span class="ml-1 text-xs text-red-600">out of stock</span>
+                                    @elseif ($stock <= $lowStockThreshold)
+                                        <span class="ml-1 text-xs text-yellow-600">low</span>
+                                    @endif
                                 @else
-                                    <span class="text-xs text-muted">{{ $product->variants->sum('stock') }} total</span>
+                                    <span class="text-sm text-ink">{{ $product->variants->sum('stock') }}</span>
+                                    <span class="ml-1 text-xs text-muted">across {{ $product->variants->count() }} variants</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3">

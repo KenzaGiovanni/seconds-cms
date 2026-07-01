@@ -3,6 +3,7 @@
 use App\Enums\OrderStatus;
 use App\Exceptions\InvalidOrderTransition;
 use App\Models\Order;
+use App\Models\Product;
 
 function makeOrder(OrderStatus $status = OrderStatus::Pending): Order
 {
@@ -75,4 +76,39 @@ it('can cancel before payment', function () {
     expect($order->status)->toBe(OrderStatus::Cancelled)
         ->and($order->cancelled_at)->not->toBeNull()
         ->and($order->status->isTerminal())->toBeTrue();
+});
+
+it('restocks reserved inventory when cancelling a paid order', function () {
+    $product = Product::create([
+        'name' => 'Reserved Widget', 'slug' => 'reserved-widget', 'type' => 'simple',
+        'status' => 'published', 'price' => 40000, 'stock_policy' => 'deny', 'stock' => 8,
+    ]);
+
+    $order = makeOrder(OrderStatus::Paid);
+    $order->items()->create([
+        'product_id' => $product->id, 'name' => $product->name,
+        'unit_price' => 40000, 'quantity' => 3, 'line_total' => 120000, 'currency' => 'IDR',
+    ]);
+
+    $order->transitionTo(OrderStatus::Cancelled);
+
+    // Stock reserved at 8 (checkout would have decremented already); cancelling gives 3 back.
+    expect($product->fresh()->stock)->toBe(11);
+});
+
+it('does not restock when leaving a state that never held a reservation', function () {
+    $product = Product::create([
+        'name' => 'Pending Widget', 'slug' => 'pending-widget', 'type' => 'simple',
+        'status' => 'published', 'price' => 40000, 'stock_policy' => 'deny', 'stock' => 8,
+    ]);
+
+    $order = makeOrder(OrderStatus::Pending);
+    $order->items()->create([
+        'product_id' => $product->id, 'name' => $product->name,
+        'unit_price' => 40000, 'quantity' => 3, 'line_total' => 120000, 'currency' => 'IDR',
+    ]);
+
+    $order->transitionTo(OrderStatus::Cancelled);
+
+    expect($product->fresh()->stock)->toBe(8);
 });

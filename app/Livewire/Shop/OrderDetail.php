@@ -32,14 +32,7 @@ class OrderDetail extends Component
             return;
         }
 
-        // Restock before the transition flips the status - shouldRestockOnCancel()
-        // reflects the state we're leaving, not the one we're entering.
-        if ($to === OrderStatus::Cancelled && $this->order->status->shouldRestockOnCancel()) {
-            foreach ($this->order->items as $item) {
-                $item->product?->incrementStock($item->quantity, $item->variant);
-            }
-        }
-
+        // Order::transitionTo handles restock-on-cancel + timestamp stamping.
         $this->order->transitionTo($to);
         session()->flash('success', 'Order status updated.');
 

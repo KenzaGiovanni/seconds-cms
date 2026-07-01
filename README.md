@@ -124,7 +124,9 @@ Admins manage orders at `/admin/shop/orders` (`orders.manage` permission): a lis
 
 ### Inventory + order-management polish
 
-The admin product list shows an inline stock editor (a number input + Save) for simple, stock-tracking products - a quick correction path that bypasses the full product edit form. Both the admin list and the storefront shop grid flag "low stock" using one shared threshold, `config('seconds.low_stock_threshold')` (env `SECONDS_LOW_STOCK_THRESHOLD`, default 5). Order confirmation and status-change emails are stubbed with a code comment (same convention as the Forms module) until mail is configured - nothing sends yet.
+The admin product list shows stock **read-only** (edit stock on the product form itself). Both the admin list and the storefront shop grid flag "low stock" / "out of stock" using one shared threshold, `config('seconds.low_stock_threshold')` (env `SECONDS_LOW_STOCK_THRESHOLD`, default 5). Order confirmation and status-change emails are stubbed with a code comment (same convention as the Forms module) until mail is configured - nothing sends yet.
+
+**Stock reservation model.** Placing an order decrements ("reserves") stock immediately, at checkout. Paying keeps it reserved; cancelling an order that was `awaiting_payment` or `paid` returns the stock. This restock-on-cancel lives in `Order::transitionTo()`, so every path that cancels an order - admin action now, payment webhooks/expiry later - restores inventory automatically.
 
 ### See it: the demo shop
 

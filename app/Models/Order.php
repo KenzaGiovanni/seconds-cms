@@ -61,6 +61,15 @@ class Order extends Model
             throw InvalidOrderTransition::between($this->status, $to);
         }
 
+        // Release reserved stock when cancelling from a state that still held a
+        // reservation (awaiting_payment / paid). Checkout decrements stock up
+        // front, so cancelling must give it back. Centralised here so every
+        // caller - admin action, payment webhooks (Phase 3), expiry jobs - gets
+        // it for free. `shouldRestockOnCancel()` reflects the state being LEFT.
+        if ($to === OrderStatus::Cancelled && $this->status->shouldRestockOnCancel()) {
+            $this->restockItems();
+        }
+
         $this->status = $to;
 
         $stamp = match ($to) {
@@ -76,6 +85,16 @@ class Order extends Model
         }
 
         $this->save();
+    }
+
+    /** Return each line's quantity to the product/variant it was reserved from. */
+    protected function restockItems(): void
+    {
+        $this->loadMissing('items.product', 'items.variant');
+
+        foreach ($this->items as $item) {
+            $item->product?->incrementStock($item->quantity, $item->variant);
+        }
     }
 
     public function canTransitionTo(OrderStatus $to): bool
