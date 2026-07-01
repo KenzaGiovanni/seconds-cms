@@ -95,7 +95,7 @@
 
                 {{-- Shop (visible only when the ecommerce toggle is on + user has shop access) --}}
                 @if(\App\Support\Feature::ecommerce())
-                    @canany([\App\Enums\Permission::ProductsManage->value, \App\Enums\Permission::OrdersManage->value])
+                    @canany([\App\Enums\Permission::ProductsManage->value, \App\Enums\Permission::OrdersManage->value, \App\Enums\Permission::PromotionsManage->value])
                         <p class="{{ $sectionLabel }} mt-4">Shop</p>
                         @can(\App\Enums\Permission::ProductsManage->value)
                             <a href="{{ route('admin.shop.products.index') }}"
@@ -111,6 +111,12 @@
                             <a href="{{ route('admin.shop.orders.index') }}"
                                @class([$navItem, $navActive => request()->routeIs('admin.shop.orders.*'), $navIdle => ! request()->routeIs('admin.shop.orders.*')])>
                                 Orders
+                            </a>
+                        @endcan
+                        @can(\App\Enums\Permission::PromotionsManage->value)
+                            <a href="{{ route('admin.shop.promotions.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.promotions.*'), $navIdle => ! request()->routeIs('admin.shop.promotions.*')])>
+                                Promotions
                             </a>
                         @endcan
                     @endcanany

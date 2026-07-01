@@ -23,6 +23,8 @@ use App\Livewire\Shop\ProductCategoryForm;
 use App\Livewire\Shop\ProductCategoryList;
 use App\Livewire\Shop\ProductForm;
 use App\Livewire\Shop\ProductList;
+use App\Livewire\Shop\PromotionForm;
+use App\Livewire\Shop\PromotionList;
 use App\Livewire\Themes\ThemeAdmin;
 use App\Livewire\Themes\ThemeCodeEditor;
 use App\Livewire\Themes\ThemeSettings as ThemeSettingsAdmin;
@@ -179,6 +181,13 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', OrderList::class)->name('index');
             Route::get('/{id}', OrderDetail::class)->name('show');
+        });
+
+        // Promotions & coupons
+        Route::prefix('promotions')->name('promotions.')->group(function () {
+            Route::get('/', PromotionList::class)->name('index');
+            Route::get('/create', PromotionForm::class)->name('create');
+            Route::get('/{id}/edit', PromotionForm::class)->name('edit');
         });
     });
 });
