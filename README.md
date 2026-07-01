@@ -108,7 +108,11 @@ With ecommerce on, `/admin/shop/products` and `/admin/shop/categories` give staf
 
 ### Storefront
 
-`/shop` lists published, in-stock-aware products (grid, optional `?category=slug` filter) and `/shop/{slug}` is the product detail page. Variant selection and stock/price display are handled by an embedded Livewire widget (`App\Livewire\Shop\ProductDetail`) so switching a variant updates price/stock without a full page reload. Both routes 404 when the ecommerce toggle is off or the product isn't published. Cart + checkout are Phase 2.3/2.4 - the "Add to cart" button is present but not yet wired.
+`/shop` lists published, in-stock-aware products (grid, optional `?category=slug` filter) and `/shop/{slug}` is the product detail page. Variant selection and stock/price display are handled by an embedded Livewire widget (`App\Livewire\Shop\ProductDetail`) so switching a variant updates price/stock without a full page reload. Both routes 404 when the ecommerce toggle is off or the product isn't published.
+
+### Cart
+
+A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by user once logged in (no merge-on-login yet - a guest cart doesn't currently follow you into an account). Add to cart from the product detail widget (variant-aware, respects each product's stock policy); a header mini-cart badge and the `/cart` page both update live via a `cart-updated` browser event, no full page reload needed to see quantity/total changes. Checkout is Phase 2.4 - carts don't convert to orders yet.
 
 ## Themes
 
@@ -206,7 +210,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), and storefront catalog (2.2) are done; cart, checkout/orders, and inventory polish (2.3-2.5) are next. Test suite: **254/254 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), storefront catalog (2.2), and cart (2.3) are done; checkout/orders and inventory polish (2.4-2.5) are next. Test suite: **270/270 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -224,12 +228,13 @@ What's shipped:
 - **Ecommerce data model** (2.0): Product/ProductVariant/ProductCategory, Order/OrderItem, Cart/CartItem, `Money` integer-minor-units support (IDR), full order state machine (pending -> awaiting_payment -> paid -> fulfilled -> completed, + cancelled/refunded)
 - **Catalog admin** (2.1): product + category CRUD (`/admin/shop/products`, `/admin/shop/categories`), simple + variable products with a variant editor, stock policies, category assignment - see "Catalog admin" above
 - **Storefront catalog** (2.2): `/shop` grid with category filter, `/shop/{slug}` product detail page with a Livewire variant-selection widget - see "Storefront" above
+- **Cart** (2.3): session/user-keyed db-backed cart, add/update/remove, stock-checked, live mini-cart + cart page - see "Cart" above
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
-3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog done; 2.3 cart, 2.4 checkout/orders, 2.5 polish next).
+3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog, 2.3 cart done; 2.4 checkout/orders, 2.5 polish next).
 4. **Phase 3** - Payments (Xendit).
 5. **Phase 4** - Delivery (KiriminAja).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.

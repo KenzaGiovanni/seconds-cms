@@ -48,6 +48,7 @@ Route::get('/shop', [FrontController::class, 'shop'])->name('shop.index');
 Route::get('/shop/{slug}', [FrontController::class, 'product'])
     ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
     ->name('shop.product');
+Route::get('/cart', [FrontController::class, 'cart'])->name('cart.index');
 
 // Public form submission endpoint.
 Route::post('/forms/{slug}', [FormController::class, 'submit'])

@@ -791,6 +791,87 @@
         }
         .btn-add-to-cart:hover:not(:disabled) { background: var(--accent2); }
         .btn-add-to-cart:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .add-to-cart-row { display: flex; gap: 0.75rem; align-items: stretch; }
+        .qty-input {
+            width: 4.5rem;
+            font: inherit;
+            font-size: 0.9375rem;
+            text-align: center;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-btn);
+            padding: 0 0.5rem;
+        }
+        .add-to-cart-row .btn-add-to-cart { flex: 1; }
+
+        .cart-feedback { font-size: 0.875rem; margin-bottom: 0.75rem; padding: 0.5rem 0.875rem; border-radius: var(--radius-btn); }
+        .cart-feedback--success { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+        .cart-feedback--error { background: #fee2e2; color: #991b1b; }
+
+        /* --- Mini cart (header) --- */
+        .mini-cart {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-left: 1rem;
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--ink);
+            text-decoration: none;
+        }
+        .mini-cart:hover { color: var(--accent); text-decoration: none; }
+        .mini-cart-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            padding: 0 0.35rem;
+            border-radius: var(--radius-pill);
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.6875rem;
+            font-weight: 600;
+        }
+
+        /* --- Cart page --- */
+        .cart-table { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+        .cart-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1.25rem;
+            background: var(--soft);
+            border-radius: var(--radius-card);
+        }
+        @media (max-width: 640px) {
+            .cart-row { grid-template-columns: 1fr; gap: 0.75rem; }
+        }
+        .cart-row-name { font-weight: 600; font-family: 'Space Grotesk', sans-serif; margin-bottom: 0.125rem; }
+        .cart-row-variant { font-size: 0.8125rem; color: var(--muted); margin-bottom: 0.25rem; }
+        .cart-row-price { font-size: 0.875rem; color: var(--muted); }
+        .cart-row-total { font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+        .cart-remove-btn {
+            background: none;
+            border: none;
+            color: #b91c1c;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        .cart-remove-btn:hover { text-decoration: underline; }
+        .cart-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-top: 2px solid var(--line);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .cart-summary-label { font-size: 1rem; color: var(--muted); }
+        .cart-summary-total { font-size: 1.375rem; font-weight: 700; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -800,6 +881,9 @@
         <div class="wrap">
             <a href="{{ url('/') }}" class="site-wordmark">{{ config('app.name') }}<span>.</span></a>
             @menu('primary')
+            @if(\App\Support\Feature::ecommerce())
+                @livewire('shop.mini-cart')
+            @endif
         </div>
     </header>
 

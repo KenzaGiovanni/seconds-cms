@@ -4,11 +4,13 @@ namespace App\Livewire\Shop;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\CartManager;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * Handles variant selection on the storefront product detail page.
- * Embedded inside the theme template via @livewire('shop.product-detail', ...).
+ * Handles variant selection + add-to-cart on the storefront product detail
+ * page. Embedded inside the theme template via @livewire('shop.product-detail', ...).
  */
 class ProductDetail extends Component
 {
@@ -17,6 +19,12 @@ class ProductDetail extends Component
     public ?int $selectedVariantId = null;
 
     public ?Product $product = null;
+
+    public int $quantity = 1;
+
+    public ?string $addedMessage = null;
+
+    public ?string $errorMessage = null;
 
     public function mount(int $productId): void
     {
@@ -34,6 +42,35 @@ class ProductDetail extends Component
         $variant = $this->product->variants->firstWhere('id', $variantId);
         if ($variant) {
             $this->selectedVariantId = $variantId;
+            $this->addedMessage = null;
+            $this->errorMessage = null;
+        }
+    }
+
+    #[On('cart-updated')]
+    public function refreshStock(): void
+    {
+        $this->product->refresh();
+        $this->product->load('variants');
+    }
+
+    public function addToCart(CartManager $cart): void
+    {
+        $this->addedMessage = null;
+        $this->errorMessage = null;
+
+        if (! $this->isInStock()) {
+            $this->errorMessage = 'Out of stock.';
+
+            return;
+        }
+
+        try {
+            $cart->addItem($this->product, max(1, $this->quantity), $this->getSelectedVariant());
+            $this->addedMessage = 'Added to cart.';
+            $this->dispatch('cart-updated');
+        } catch (\RuntimeException $e) {
+            $this->errorMessage = $e->getMessage();
         }
     }
 

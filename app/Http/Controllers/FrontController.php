@@ -197,6 +197,23 @@ class FrontController extends Controller
         ]);
     }
 
+    /** Cart page: the interactive item list is a Livewire island in the theme view. */
+    public function cart(): View
+    {
+        abort_unless(Feature::ecommerce(), 404);
+
+        return view('theme::cart', [
+            'themeSettings' => $this->themeSettings->active(),
+            'seo' => [
+                'title' => 'Your Cart - '.config('app.name'),
+                'description' => null,
+                'canonical' => url('/cart'),
+                'og_type' => 'website',
+                'noindex' => true,
+            ],
+        ]);
+    }
+
     /** Resolve a published page by slug (catch-all for single-segment page URLs). */
     public function show(string $slug): View
     {
