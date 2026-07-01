@@ -15,20 +15,69 @@
         </div>
     @endif
 
-    <div class="mb-6 max-w-xl rounded-[var(--radius-btn)] border border-line bg-bg p-5">
-        <p class="text-sm text-muted">
-            Active provider: <span class="font-medium text-ink">{{ $provider->label() }}</span>
-        </p>
-    </div>
-
     @php
         $input = 'w-full rounded-[var(--radius-btn)] border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent';
         $label = 'mb-1 block font-display text-sm font-medium text-ink';
     @endphp
 
-    <form wire:submit="save" class="max-w-xl space-y-6">
-        <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-5 space-y-4">
-            <h2 class="font-display text-sm font-semibold text-ink">Manual bank transfer</h2>
+    {{-- General - applies regardless of which provider is active --}}
+    <div class="mb-8 max-w-2xl rounded-[var(--radius-btn)] border border-line bg-bg p-5">
+        <h2 class="mb-1 font-display text-sm font-semibold text-ink">Payment window</h2>
+        <p class="mb-3 text-sm text-muted">A customer who has uploaded proof of payment is never auto-cancelled while awaiting review.</p>
+        <form wire:submit="save" class="flex items-end gap-3">
+            <div class="max-w-xs flex-1">
+                <label class="{{ $label }}" for="windowMinutes">Minutes to pay before an order auto-cancels</label>
+                <input id="windowMinutes" wire:model="windowMinutes" type="number" min="1" max="1440" class="{{ $input }}" />
+                @error('windowMinutes') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+            </div>
+            <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
+                Save
+            </button>
+        </form>
+    </div>
+
+    {{-- Integrations: pick a provider to configure it --}}
+    <h2 class="mb-3 font-display text-sm font-semibold text-ink">Payment providers</h2>
+    <div class="mb-6 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
+        <button type="button" wire:click="selectProvider('manual')"
+                @class([
+                    'rounded-[var(--radius-btn)] border bg-bg p-5 text-left transition',
+                    'border-accent ring-1 ring-accent' => $activeProvider === 'manual',
+                    'border-line hover:border-accent/50' => $activeProvider !== 'manual',
+                ])>
+            <div class="flex items-center justify-between">
+                <h3 class="font-display text-sm font-semibold text-ink">Manual bank transfer</h3>
+                @if ($provider->value === 'manual')
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
+                @else
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Available</span>
+                @endif
+            </div>
+            <p class="mt-1 text-sm text-muted">Customer transfers manually and uploads proof of payment for you to verify. No keys, no integration.</p>
+        </button>
+
+        <button type="button" wire:click="selectProvider('xendit')"
+                @class([
+                    'rounded-[var(--radius-btn)] border bg-bg p-5 text-left transition',
+                    'border-accent ring-1 ring-accent' => $activeProvider === 'xendit',
+                    'border-line hover:border-accent/50' => $activeProvider !== 'xendit',
+                ])>
+            <div class="flex items-center justify-between">
+                <h3 class="font-display text-sm font-semibold text-ink">Xendit</h3>
+                @if ($provider->value === 'xendit')
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
+                @else
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Available</span>
+                @endif
+            </div>
+            <p class="mt-1 text-sm text-muted">Virtual Account, QRIS, e-wallet, and card via a hosted checkout page. Requires API keys.</p>
+        </button>
+    </div>
+
+    {{-- Selected provider's configuration --}}
+    @if ($activeProvider === 'manual')
+        <form wire:submit="save" class="max-w-2xl space-y-4 rounded-[var(--radius-btn)] border border-line bg-bg p-5">
+            <h2 class="font-display text-sm font-semibold text-ink">Configure manual bank transfer</h2>
             <p class="text-sm text-muted">Shown to the customer at checkout and on their order page while awaiting payment.</p>
 
             <div>
@@ -54,33 +103,22 @@
                 <textarea id="bankInstructions" wire:model="bankInstructions" rows="3" class="{{ $input }}" placeholder="Transfer the exact amount, then upload your proof of payment below."></textarea>
                 @error('bankInstructions') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
-        </div>
 
-        <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-5 space-y-4">
-            <h2 class="font-display text-sm font-semibold text-ink">Payment window</h2>
-
-            <div>
-                <label class="{{ $label }}" for="windowMinutes">Minutes to pay before an order auto-cancels</label>
-                <input id="windowMinutes" wire:model="windowMinutes" type="number" min="1" max="1440" class="{{ $input }}" />
-                @error('windowMinutes') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                <p class="mt-1 text-xs text-muted">A customer who has uploaded proof of payment is never auto-cancelled while awaiting review.</p>
-            </div>
-        </div>
-
-        <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
-            Save
-        </button>
-    </form>
-
-    <form wire:submit="activateXendit" class="mt-6 max-w-xl space-y-4">
-        <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-5 space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="font-display text-sm font-semibold text-ink">Xendit</h2>
+            <div class="flex gap-2">
+                <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
+                    Save
+                </button>
                 @if ($provider->value === 'xendit')
-                    <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
+                    <button type="button" wire:click="useManual" wire:confirm="Switch back to manual bank transfer?"
+                            class="rounded-[var(--radius-btn)] border border-line px-4 py-2 font-display text-sm font-medium text-ink transition hover:bg-soft">
+                        Use manual bank transfer
+                    </button>
                 @endif
             </div>
-            <p class="text-sm text-muted">Unlocks Virtual Account, QRIS, e-wallet, and card at checkout.</p>
+        </form>
+    @else
+        <form wire:submit="activateXendit" class="max-w-2xl space-y-4 rounded-[var(--radius-btn)] border border-line bg-bg p-5">
+            <h2 class="font-display text-sm font-semibold text-ink">Configure Xendit</h2>
 
             @if ($maskedSecretKey)
                 <p class="text-xs text-muted">Current secret key: <span class="font-mono">{{ $maskedSecretKey }}</span></p>
@@ -114,18 +152,18 @@
                 </div>
                 @error('xenditMethods') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
-        </div>
 
-        <div class="flex gap-2">
-            <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
-                Activate Xendit
-            </button>
-            @if ($provider->value === 'xendit')
-                <button type="button" wire:click="useManual" wire:confirm="Switch back to manual bank transfer?"
-                        class="rounded-[var(--radius-btn)] border border-line px-4 py-2 font-display text-sm font-medium text-ink transition hover:bg-soft">
-                    Switch to manual
+            <div class="flex gap-2">
+                <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
+                    Activate Xendit
                 </button>
-            @endif
-        </div>
-    </form>
+                @if ($provider->value === 'xendit')
+                    <button type="button" wire:click="useManual" wire:confirm="Switch back to manual bank transfer?"
+                            class="rounded-[var(--radius-btn)] border border-line px-4 py-2 font-display text-sm font-medium text-ink transition hover:bg-soft">
+                        Switch to manual
+                    </button>
+                @endif
+            </div>
+        </form>
+    @endif
 </div>

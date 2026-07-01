@@ -18,9 +18,32 @@
         </div>
     @endif
 
-    <div class="mb-8">
-        <h2 class="mb-3 font-display text-sm font-semibold text-ink">Awaiting verification</h2>
+    <div class="mb-6 flex gap-2 border-b border-line">
+        <button type="button" wire:click="setTab('submitted')"
+                @class([
+                    'border-b-2 px-1 pb-3 font-display text-sm font-medium transition',
+                    'border-accent text-ink' => $tab === 'submitted',
+                    'border-transparent text-muted hover:text-ink' => $tab !== 'submitted',
+                ])>
+            Awaiting verification
+            @if ($submitted->isNotEmpty())
+                <span class="ml-1 rounded-full bg-soft px-1.5 py-0.5 text-xs text-muted">{{ $submitted->count() }}</span>
+            @endif
+        </button>
+        <button type="button" wire:click="setTab('pending')"
+                @class([
+                    'border-b-2 px-1 pb-3 font-display text-sm font-medium transition',
+                    'border-accent text-ink' => $tab === 'pending',
+                    'border-transparent text-muted hover:text-ink' => $tab !== 'pending',
+                ])>
+            Pending
+            @if ($pending->isNotEmpty())
+                <span class="ml-1 rounded-full bg-soft px-1.5 py-0.5 text-xs text-muted">{{ $pending->count() }}</span>
+            @endif
+        </button>
+    </div>
 
+    @if ($tab === 'submitted')
         @if ($submitted->isEmpty())
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg px-6 py-8 text-center text-sm text-muted">
                 Nothing waiting on review.
@@ -79,11 +102,7 @@
                 @endforeach
             </div>
         @endif
-    </div>
-
-    <div>
-        <h2 class="mb-3 font-display text-sm font-semibold text-ink">Pending (no proof yet)</h2>
-
+    @else
         @if ($pending->isEmpty())
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg px-6 py-8 text-center text-sm text-muted">
                 Nothing pending.
@@ -110,5 +129,5 @@
                 </table>
             </div>
         @endif
-    </div>
+    @endif
 </div>

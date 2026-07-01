@@ -19,9 +19,17 @@ class PaymentVerificationList extends Component
 
     public string $rejectionReason = '';
 
+    /** @var 'submitted'|'pending' */
+    public string $tab = 'submitted';
+
     public function mount(): void
     {
         abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
+    }
+
+    public function setTab(string $tab): void
+    {
+        $this->tab = $tab;
     }
 
     public function confirm(int $paymentId, PaymentService $payments): void

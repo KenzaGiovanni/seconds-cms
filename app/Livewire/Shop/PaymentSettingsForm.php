@@ -36,6 +36,9 @@ class PaymentSettingsForm extends Component
     /** @var list<string> */
     public array $xenditMethods = [];
 
+    /** Which integration card's config panel is expanded - defaults to whichever is active. */
+    public string $activeProvider = 'manual';
+
     public function mount(): void
     {
         abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
@@ -48,6 +51,12 @@ class PaymentSettingsForm extends Component
         $this->windowMinutes = PaymentSettings::windowMinutes();
 
         $this->xenditMethods = array_map(fn (PaymentMethod $m) => $m->value, PaymentSettings::xenditEnabledMethods());
+        $this->activeProvider = PaymentSettings::provider()->value;
+    }
+
+    public function selectProvider(string $provider): void
+    {
+        $this->activeProvider = $provider;
     }
 
     public function save(): void
