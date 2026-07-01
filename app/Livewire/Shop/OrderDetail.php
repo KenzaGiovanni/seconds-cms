@@ -42,6 +42,8 @@ class OrderDetail extends Component
 
         $this->order->transitionTo($to);
         session()->flash('success', 'Order status updated.');
+
+        // Customer status-update email (e.g. "paid"/"shipped") is stubbed until mail is configured.
     }
 
     public function render()

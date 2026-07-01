@@ -75,6 +75,7 @@ class CheckoutService
 
             $cart->items()->delete();
 
+            // Order confirmation email is stubbed until mail is configured (matches Forms module convention).
             return $order;
         });
     }

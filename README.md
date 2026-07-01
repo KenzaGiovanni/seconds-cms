@@ -120,6 +120,10 @@ A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by 
 
 Admins manage orders at `/admin/shop/orders` (`orders.manage` permission): a list with status pills, and a detail screen showing line items, shipping address, totals, and status-transition buttons limited to whatever `OrderStatus::transitions()` allows next. Cancelling an order that was `awaiting_payment` or `paid` automatically restocks its line items.
 
+### Inventory + order-management polish
+
+The admin product list shows an inline stock editor (a number input + Save) for simple, stock-tracking products - a quick correction path that bypasses the full product edit form. Both the admin list and the storefront shop grid flag "low stock" using one shared threshold, `config('seconds.low_stock_threshold')` (env `SECONDS_LOW_STOCK_THRESHOLD`, default 5). Order confirmation and status-change emails are stubbed with a code comment (same convention as the Forms module) until mail is configured - nothing sends yet.
+
 ## Themes
 
 A theme is a folder under `themes/<slug>/`:
@@ -216,7 +220,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), storefront catalog (2.2), cart (2.3), and checkout/orders (2.4) are done; inventory + order-management polish (2.5) is next. Test suite: **286/286 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, and Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish) are all **complete**. Phase 3 (Xendit payments) is next. Test suite: **292/292 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -236,13 +240,14 @@ What's shipped:
 - **Storefront catalog** (2.2): `/shop` grid with category filter, `/shop/{slug}` product detail page with a Livewire variant-selection widget - see "Storefront" above
 - **Cart** (2.3): session/user-keyed db-backed cart, add/update/remove, stock-checked, live mini-cart + cart page - see "Cart" above
 - **Checkout + orders** (2.4): guest-friendly checkout, order snapshotting, stock decrement, admin order list/detail with guarded status transitions + restock-on-cancel - see "Checkout + orders" above
+- **Inventory + order-management polish** (2.5): manual stock adjustment, shared low-stock threshold across admin + storefront, stubbed order emails - see "Inventory + order-management polish" above
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
-3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog, 2.3 cart, 2.4 checkout/orders done; 2.5 polish next).
-4. **Phase 3** - Payments (Xendit).
+3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **DONE** (2.0-2.5 all shipped).
+4. **Phase 3** - Payments (Xendit) - **NEXT**.
 5. **Phase 4** - Delivery (KiriminAja).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.
 

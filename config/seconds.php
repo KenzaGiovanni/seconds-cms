@@ -20,4 +20,18 @@ return [
     // Extensions the code editor is allowed to open / save.
     'theme_editor_extensions' => ['blade.php', 'php', 'css', 'js', 'json', 'svg', 'txt', 'md'],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Low stock threshold
+    |--------------------------------------------------------------------------
+    |
+    | A simple product or variant at or below this quantity is flagged as
+    | "low stock" in the admin catalog and on the storefront. Only applies to
+    | stock-tracking policies (deny / backorder) - StockPolicy::None never
+    | shows a stock figure at all.
+    |
+    */
+
+    'low_stock_threshold' => env('SECONDS_LOW_STOCK_THRESHOLD', 5),
+
 ];

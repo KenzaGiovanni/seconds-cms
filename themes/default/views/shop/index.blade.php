@@ -41,10 +41,13 @@
                         @endif
                     </p>
                     @if ($product->stock_policy->value !== 'none')
-                        @php $stock = $product->isSimple() ? ($product->stock ?? 0) : $product->variants->sum('stock'); @endphp
+                        @php
+                            $stock = $product->isSimple() ? ($product->stock ?? 0) : $product->variants->sum('stock');
+                            $lowStockThreshold = config('seconds.low_stock_threshold');
+                        @endphp
                         @if ($stock <= 0 && $product->stock_policy->value === 'deny')
                             <span class="badge badge--out">Out of stock</span>
-                        @elseif ($stock > 0 && $stock <= 5)
+                        @elseif ($stock > 0 && $stock <= $lowStockThreshold)
                             <span class="badge badge--low">Only {{ $stock }} left</span>
                         @endif
                     @endif

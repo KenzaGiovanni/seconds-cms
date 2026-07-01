@@ -52,12 +52,19 @@
                                 @if ($product->stock_policy->value === 'none')
                                     <span class="text-xs text-muted">N/A</span>
                                 @elseif ($product->isSimple())
-                                    <span @class([
-                                        'text-xs font-medium',
-                                        'text-red-600' => ($product->stock ?? 0) <= 0,
-                                        'text-yellow-600' => ($product->stock ?? 0) > 0 && ($product->stock ?? 0) <= 5,
-                                        'text-green-700' => ($product->stock ?? 0) > 5,
-                                    ])>{{ $product->stock ?? 0 }}</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="number" min="0"
+                                               wire:model="stockEdits.{{ $product->id }}"
+                                               value="{{ $stockEdits[$product->id] ?? $product->stock ?? 0 }}"
+                                               class="w-16 rounded border border-line bg-soft px-1.5 py-1 text-xs text-ink">
+                                        <button wire:click="adjustStock({{ $product->id }})"
+                                                class="text-xs font-medium text-accent hover:underline">Save</button>
+                                        @if (($product->stock ?? 0) <= 0)
+                                            <span class="text-xs font-medium text-red-600">out</span>
+                                        @elseif (($product->stock ?? 0) <= $lowStockThreshold)
+                                            <span class="text-xs font-medium text-yellow-600">low</span>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-xs text-muted">{{ $product->variants->sum('stock') }} total</span>
                                 @endif
