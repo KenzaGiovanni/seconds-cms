@@ -124,6 +124,20 @@ Admins manage orders at `/admin/shop/orders` (`orders.manage` permission): a lis
 
 The admin product list shows an inline stock editor (a number input + Save) for simple, stock-tracking products - a quick correction path that bypasses the full product edit form. Both the admin list and the storefront shop grid flag "low stock" using one shared threshold, `config('seconds.low_stock_threshold')` (env `SECONDS_LOW_STOCK_THRESHOLD`, default 5). Order confirmation and status-change emails are stubbed with a code comment (same convention as the Forms module) until mail is configured - nothing sends yet.
 
+### See it: the demo shop
+
+The ecommerce toggle is **off by default** - with it off, `/shop`, `/cart`, `/checkout`, and the admin "Shop" sidebar section are all correctly hidden/404 (that's the toggle working, not a bug). To actually see the shop:
+
+```bash
+php artisan db:seed --class=DemoShopSeeder   # turns ecommerce ON + seeds sample products/categories
+```
+
+Then visit:
+- `/shop` - product grid (2 categories, a simple mug, a simple tote, a variable tee with 3 size variants, a draft sticker pack that only shows in the admin)
+- `/shop/classic-tee` - variant selection + add to cart
+- `/cart` and `/checkout` - full guest checkout flow
+- `/admin/shop/products`, `/admin/shop/categories`, `/admin/shop/orders` (log in as `admin@seconds.test` / `password` first)
+
 ## Themes
 
 A theme is a folder under `themes/<slug>/`:
