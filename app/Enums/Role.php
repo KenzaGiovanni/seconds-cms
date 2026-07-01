@@ -55,6 +55,7 @@ enum Role: string
                 Permission::SettingsManage,
                 Permission::ProductsManage,
                 Permission::OrdersManage,
+                Permission::PromotionsManage,
             ],
             self::Admin => [
                 Permission::ContentManage,
@@ -63,6 +64,7 @@ enum Role: string
                 Permission::UsersManage,
                 Permission::ProductsManage,
                 Permission::OrdersManage,
+                Permission::PromotionsManage,
             ],
             self::Editor => [
                 Permission::ContentManage,

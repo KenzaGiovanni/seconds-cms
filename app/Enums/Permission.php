@@ -32,6 +32,9 @@ enum Permission: string
     // Ecommerce: orders + fulfilment — Phase 2.4.
     case OrdersManage = 'orders.manage';
 
+    // Ecommerce: promotions + coupons — post-Phase-2 addition.
+    case PromotionsManage = 'promotions.manage';
+
     public function label(): string
     {
         return match ($this) {
@@ -42,6 +45,7 @@ enum Permission: string
             self::UsersManage => 'Manage users',
             self::ProductsManage => 'Manage products',
             self::OrdersManage => 'Manage orders',
+            self::PromotionsManage => 'Manage promotions',
         };
     }
 
