@@ -16,6 +16,7 @@ use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
 use App\Livewire\Settings\WebsiteSettings;
+use App\Livewire\Shop\OrderDetail;
 use App\Livewire\Shop\OrderList;
 use App\Livewire\Shop\ProductCategoryForm;
 use App\Livewire\Shop\ProductCategoryList;
@@ -49,6 +50,10 @@ Route::get('/shop/{slug}', [FrontController::class, 'product'])
     ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
     ->name('shop.product');
 Route::get('/cart', [FrontController::class, 'cart'])->name('cart.index');
+Route::get('/checkout', [FrontController::class, 'checkout'])->name('checkout.index');
+Route::get('/order/{number}', [FrontController::class, 'orderConfirmation'])
+    ->where('number', '[A-Za-z0-9\-]+')
+    ->name('order.confirmation');
 
 // Public form submission endpoint.
 Route::post('/forms/{slug}', [FormController::class, 'submit'])
@@ -154,8 +159,11 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
             Route::get('/{id}/edit', ProductCategoryForm::class)->name('edit');
         });
 
-        // Orders (stub — full list/detail in Phase 2.4)
-        Route::get('/orders', OrderList::class)->name('orders.index');
+        // Orders
+        Route::prefix('orders')->name('orders.')->group(function () {
+            Route::get('/', OrderList::class)->name('index');
+            Route::get('/{id}', OrderDetail::class)->name('show');
+        });
     });
 });
 

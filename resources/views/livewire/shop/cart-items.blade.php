@@ -40,5 +40,9 @@
             <span class="cart-summary-label">Subtotal</span>
             <span class="cart-summary-total">{{ $totals['formatted'] }}</span>
         </div>
+
+        <div class="cart-checkout-link">
+            <a href="{{ route('checkout.index') }}" wire:navigate class="btn-add-to-cart btn-link">Proceed to checkout</a>
+        </div>
     @endif
 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Product;
@@ -208,6 +209,53 @@ class FrontController extends Controller
                 'title' => 'Your Cart - '.config('app.name'),
                 'description' => null,
                 'canonical' => url('/cart'),
+                'og_type' => 'website',
+                'noindex' => true,
+            ],
+        ]);
+    }
+
+    /** Checkout: the form + place-order action is a Livewire island. */
+    public function checkout(): View
+    {
+        abort_unless(Feature::ecommerce(), 404);
+
+        return view('theme::checkout', [
+            'themeSettings' => $this->themeSettings->active(),
+            'seo' => [
+                'title' => 'Checkout - '.config('app.name'),
+                'description' => null,
+                'canonical' => url('/checkout'),
+                'og_type' => 'website',
+                'noindex' => true,
+            ],
+        ]);
+    }
+
+    /**
+     * Order confirmation page, looked up by the human-friendly order number.
+     * The number alone isn't a secret (visible in browser history, could be
+     * shared/guessed), so only the account owner or the guest who just placed
+     * it (flagged in their own session at checkout) may view it.
+     */
+    public function orderConfirmation(string $number): View
+    {
+        abort_unless(Feature::ecommerce(), 404);
+
+        $order = Order::with('items')->where('number', $number)->firstOrFail();
+
+        $isOwner = ($order->user_id !== null && $order->user_id === auth()->id())
+            || session('last_order_number') === $order->number;
+
+        abort_unless($isOwner, 404);
+
+        return view('theme::order-confirmation', [
+            'order' => $order,
+            'themeSettings' => $this->themeSettings->active(),
+            'seo' => [
+                'title' => 'Order Confirmed - '.config('app.name'),
+                'description' => null,
+                'canonical' => url('/order/'.$order->number),
                 'og_type' => 'website',
                 'noindex' => true,
             ],

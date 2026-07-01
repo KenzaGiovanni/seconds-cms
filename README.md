@@ -112,7 +112,13 @@ With ecommerce on, `/admin/shop/products` and `/admin/shop/categories` give staf
 
 ### Cart
 
-A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by user once logged in (no merge-on-login yet - a guest cart doesn't currently follow you into an account). Add to cart from the product detail widget (variant-aware, respects each product's stock policy); a header mini-cart badge and the `/cart` page both update live via a `cart-updated` browser event, no full page reload needed to see quantity/total changes. Checkout is Phase 2.4 - carts don't convert to orders yet.
+A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by user once logged in (no merge-on-login yet - a guest cart doesn't currently follow you into an account). Add to cart from the product detail widget (variant-aware, respects each product's stock policy); a header mini-cart badge and the `/cart` page both update live via a `cart-updated` browser event, no full page reload needed to see quantity/total changes.
+
+### Checkout + orders
+
+`/checkout` collects contact + shipping details (guest checkout - no account required) and places the order via `App\Support\CheckoutService`, which snapshots product name/sku/price/options onto each order line (later catalog edits never rewrite past orders), decrements stock, and moves the order to `awaiting_payment`. The customer lands on `/order/{number}` - that confirmation page checks ownership (account match, or a session flag set right after checkout) rather than trusting the order number alone, since order numbers aren't secret.
+
+Admins manage orders at `/admin/shop/orders` (`orders.manage` permission): a list with status pills, and a detail screen showing line items, shipping address, totals, and status-transition buttons limited to whatever `OrderStatus::transitions()` allows next. Cancelling an order that was `awaiting_payment` or `paid` automatically restocks its line items.
 
 ## Themes
 
@@ -210,7 +216,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), storefront catalog (2.2), and cart (2.3) are done; checkout/orders and inventory polish (2.4-2.5) are next. Test suite: **270/270 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), storefront catalog (2.2), cart (2.3), and checkout/orders (2.4) are done; inventory + order-management polish (2.5) is next. Test suite: **286/286 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -229,12 +235,13 @@ What's shipped:
 - **Catalog admin** (2.1): product + category CRUD (`/admin/shop/products`, `/admin/shop/categories`), simple + variable products with a variant editor, stock policies, category assignment - see "Catalog admin" above
 - **Storefront catalog** (2.2): `/shop` grid with category filter, `/shop/{slug}` product detail page with a Livewire variant-selection widget - see "Storefront" above
 - **Cart** (2.3): session/user-keyed db-backed cart, add/update/remove, stock-checked, live mini-cart + cart page - see "Cart" above
+- **Checkout + orders** (2.4): guest-friendly checkout, order snapshotting, stock decrement, admin order list/detail with guarded status transitions + restock-on-cancel - see "Checkout + orders" above
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
-3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog, 2.3 cart done; 2.4 checkout/orders, 2.5 polish next).
+3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog, 2.3 cart, 2.4 checkout/orders done; 2.5 polish next).
 4. **Phase 3** - Payments (Xendit).
 5. **Phase 4** - Delivery (KiriminAja).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.

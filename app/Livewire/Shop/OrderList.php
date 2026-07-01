@@ -3,6 +3,7 @@
 namespace App\Livewire\Shop;
 
 use App\Enums\Permission;
+use App\Models\Order;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,6 +19,8 @@ class OrderList extends Component
 
     public function render()
     {
-        return view('livewire.shop.order-list');
+        return view('livewire.shop.order-list', [
+            'orders' => Order::withCount('items')->latest('placed_at')->get(),
+        ]);
     }
 }
