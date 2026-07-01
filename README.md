@@ -96,7 +96,7 @@ if (Feature::ecommerce()) {
 }
 ```
 
-Flip it by setting the `ecommerce` value to `true` in the `settings` table (admin UI lands in a later phase). When off, ecommerce routes 404 and the shop nav is hidden.
+Flip it from **Website Settings** (`/admin/settings`, `settings.manage` permission) - a "Shop" section with an "Enable ecommerce" checkbox. When off, `/shop`, `/cart`, `/checkout` all 404 and the Shop section is hidden from the admin sidebar.
 
 ### Catalog admin
 
@@ -126,7 +126,7 @@ The admin product list shows an inline stock editor (a number input + Save) for 
 
 ### See it: the demo shop
 
-The ecommerce toggle is **off by default** - with it off, `/shop`, `/cart`, `/checkout`, and the admin "Shop" sidebar section are all correctly hidden/404 (that's the toggle working, not a bug). To actually see the shop:
+The ecommerce toggle is **off by default** - with it off, `/shop`, `/cart`, `/checkout`, and the admin "Shop" sidebar section are all correctly hidden/404 (that's the toggle working, not a bug). Turn it on at **Website Settings > Shop** (`/admin/settings`), or seed demo content which flips it on for you:
 
 ```bash
 php artisan db:seed --class=DemoShopSeeder   # turns ecommerce ON + seeds sample products/categories

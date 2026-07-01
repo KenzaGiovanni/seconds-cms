@@ -102,6 +102,22 @@
             </div>
         </div>
 
+        {{-- Shop --}}
+        <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-5 space-y-4">
+            <h2 class="font-display text-sm font-semibold text-ink">Shop</h2>
+
+            <label class="flex cursor-pointer items-start gap-2">
+                <input type="checkbox" wire:model="ecommerceEnabled"
+                       class="mt-0.5 rounded border-line text-accent focus:ring-accent" />
+                <span class="text-sm text-ink">Enable ecommerce
+                    <span class="block text-xs font-normal text-muted">
+                        Turns on the shop: catalog, cart, checkout, and orders. When off, /shop, /cart, /checkout
+                        all 404 and the Shop section is hidden from the sidebar.
+                    </span>
+                </span>
+            </label>
+        </div>
+
         <button type="submit"
                 class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:bg-accent/90">
             Save settings

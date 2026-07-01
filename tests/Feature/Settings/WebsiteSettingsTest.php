@@ -6,6 +6,7 @@ use App\Livewire\Settings\WebsiteSettings;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Feature;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\SettingsSeeder;
 use Livewire\Livewire;
@@ -85,4 +86,45 @@ it('setting a static page as front page renders it at the root', function () {
 
     Setting::flushCache();
     actingAs(websiteAdmin())->get('/')->assertOk()->assertSee('Homepage via settings');
+});
+
+it('loads the current ecommerce toggle state', function () {
+    Setting::set('ecommerce', 'true');
+    Setting::flushCache();
+
+    Livewire::actingAs(websiteAdmin())
+        ->test(WebsiteSettings::class)
+        ->assertSet('ecommerceEnabled', true);
+});
+
+it('turns ecommerce on from website settings', function () {
+    Setting::set('ecommerce', 'false');
+    Setting::flushCache();
+
+    Livewire::actingAs(websiteAdmin())
+        ->test(WebsiteSettings::class)
+        ->set('ecommerceEnabled', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    Setting::flushCache();
+    expect(Feature::ecommerce())->toBeTrue();
+
+    actingAs(websiteAdmin())->get('/shop')->assertOk();
+});
+
+it('turns ecommerce off from website settings', function () {
+    Setting::set('ecommerce', 'true');
+    Setting::flushCache();
+
+    Livewire::actingAs(websiteAdmin())
+        ->test(WebsiteSettings::class)
+        ->set('ecommerceEnabled', false)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    Setting::flushCache();
+    expect(Feature::ecommerce())->toBeFalse();
+
+    actingAs(websiteAdmin())->get('/shop')->assertNotFound();
 });

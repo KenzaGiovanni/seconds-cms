@@ -5,6 +5,7 @@ namespace App\Livewire\Settings;
 use App\Enums\Permission;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Support\Feature;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -31,6 +32,8 @@ class WebsiteSettings extends Component
 
     public $frontPageId = null;
 
+    public bool $ecommerceEnabled = false;
+
     /** Common PHP date formats offered in the dropdown. */
     public const DATE_FORMATS = [
         'd M Y',
@@ -55,6 +58,7 @@ class WebsiteSettings extends Component
         $this->showOnFront = Setting::get('show_on_front', 'posts') === 'page' ? 'page' : 'posts';
         $frontId = Setting::get('front_page_id');
         $this->frontPageId = $frontId ? (int) $frontId : null;
+        $this->ecommerceEnabled = Feature::ecommerce();
     }
 
     public function save(): void
@@ -70,6 +74,7 @@ class WebsiteSettings extends Component
             'postsPerPage' => 'required|integer|min:1|max:100',
             'showOnFront' => 'required|in:posts,page',
             'frontPageId' => 'nullable|integer|exists:contents,id',
+            'ecommerceEnabled' => 'boolean',
         ]);
 
         Setting::set('site_name', $data['siteName']);
@@ -82,6 +87,7 @@ class WebsiteSettings extends Component
         Setting::set('front_page_id', $data['showOnFront'] === 'page' && $data['frontPageId']
             ? (string) $data['frontPageId']
             : '');
+        Setting::set('ecommerce', $data['ecommerceEnabled'] ? 'true' : 'false');
 
         session()->flash('success', 'Website settings saved.');
     }
