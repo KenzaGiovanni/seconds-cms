@@ -110,6 +110,8 @@ With ecommerce on, `/admin/shop/products` and `/admin/shop/categories` give staf
 
 `/shop` lists published, in-stock-aware products (grid, optional `?category=slug` filter) and `/shop/{slug}` is the product detail page. Variant selection and stock/price display are handled by an embedded Livewire widget (`App\Livewire\Shop\ProductDetail`) so switching a variant updates price/stock without a full page reload. Both routes 404 when the ecommerce toggle is off or the product isn't published.
 
+The default theme header shows a persistent **Shop** link (next to the mini-cart) whenever ecommerce is on, so the storefront is always reachable even with no admin-configured menu.
+
 ### Cart
 
 A db-backed cart (`App\Support\CartManager`) keyed by session for guests and by user once logged in (no merge-on-login yet - a guest cart doesn't currently follow you into an account). Add to cart from the product detail widget (variant-aware, respects each product's stock policy); a header mini-cart badge and the `/cart` page both update live via a `cart-updated` browser event, no full page reload needed to see quantity/total changes.

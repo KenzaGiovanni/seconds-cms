@@ -27,6 +27,20 @@ it('returns 404 for /shop when ecommerce is off', function () {
     $this->get('/shop')->assertNotFound();
 });
 
+it('shows a Shop nav link in the theme header when ecommerce is on', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('class="header-shop-link', false)
+        ->assertSee(route('shop.index'));
+});
+
+it('hides the Shop nav link when ecommerce is off', function () {
+    Setting::set('ecommerce', 'false');
+    Setting::flushCache();
+
+    $this->get('/')->assertOk()->assertDontSee('class="header-shop-link', false);
+});
+
 it('renders the shop index', function () {
     $product = Product::create([
         'name' => 'Test Shirt',

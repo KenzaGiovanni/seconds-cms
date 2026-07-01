@@ -808,12 +808,28 @@
         .cart-feedback--success { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
         .cart-feedback--error { background: #fee2e2; color: #991b1b; }
 
+        /* --- Header shop group (Shop link + cart, always reachable when ecommerce is on) --- */
+        .header-shop {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+        .header-shop-link {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+        }
+        .header-shop-link:hover { color: var(--ink); text-decoration: none; }
+        .header-shop-link.active { color: var(--accent); }
+
         /* --- Mini cart (header) --- */
         .mini-cart {
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
-            margin-left: 1rem;
             font-family: 'Space Grotesk', system-ui, sans-serif;
             font-size: 0.9375rem;
             font-weight: 500;
@@ -952,7 +968,11 @@
             <a href="{{ url('/') }}" class="site-wordmark">{{ config('app.name') }}<span>.</span></a>
             @menu('primary')
             @if(\App\Support\Feature::ecommerce())
-                @livewire('shop.mini-cart')
+                <div class="header-shop">
+                    <a href="{{ route('shop.index') }}"
+                       @class(['header-shop-link', 'active' => request()->routeIs('shop.*')])>Shop</a>
+                    @livewire('shop.mini-cart')
+                </div>
             @endif
         </div>
     </header>
