@@ -77,13 +77,21 @@
                 @endcan
 
                 {{-- Settings --}}
-                @can(\App\Enums\Permission::SettingsManage->value)
+                @canany([\App\Enums\Permission::SettingsManage->value, \App\Enums\Permission::UsersManage->value])
                     <p class="{{ $sectionLabel }} mt-4">Settings</p>
-                    <a href="{{ route('admin.settings.index') }}"
-                       @class([$navItem, $navActive => request()->routeIs('admin.settings.*'), $navIdle => ! request()->routeIs('admin.settings.*')])>
-                        Website
-                    </a>
-                @endcan
+                    @can(\App\Enums\Permission::SettingsManage->value)
+                        <a href="{{ route('admin.settings.index') }}"
+                           @class([$navItem, $navActive => request()->routeIs('admin.settings.*'), $navIdle => ! request()->routeIs('admin.settings.*')])>
+                            Website
+                        </a>
+                    @endcan
+                    @can(\App\Enums\Permission::UsersManage->value)
+                        <a href="{{ route('admin.users.index') }}"
+                           @class([$navItem, $navActive => request()->routeIs('admin.users.*'), $navIdle => ! request()->routeIs('admin.users.*')])>
+                            Users
+                        </a>
+                    @endcan
+                @endcanany
 
                 {{-- Shop (visible only when the ecommerce toggle is on + user has shop access) --}}
                 @if(\App\Support\Feature::ecommerce())

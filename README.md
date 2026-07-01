@@ -159,6 +159,10 @@ The active theme's views are registered under the `theme::` Blade namespace by `
 
 A theme's CSS/JS/images live in its own `assets/` folder and are enqueued from Blade with the `@themeAsset('css/style.css')` directive - which resolves to `/themes/<active-slug>/assets/css/style.css?v=<mtime>`. That URL is served by `ThemeAssetController`, path-jailed with `realpath` to the theme's `assets/` folder and limited to a whitelist of static extensions (css/js/images/fonts), so a crafted path can't escape the theme. The `?v=<mtime>` cache-buster means edits (including live ones through the in-admin theme code editor) show up immediately. Only the tiny bit of genuinely dynamic CSS - the accent colour from the theme's `primary_color` setting - stays inline in the layout `<head>`, overriding the stylesheet's defaults; everything else is in `style.css`.
 
+### Users & roles
+
+`/admin/users` (`users.manage` permission - admin / super-admin only) is the user admin: list, create, edit, delete. Each user gets exactly one role (super-admin / developer / admin / editor). Passwords are set on create and optional on edit (blank keeps the current one). Guards prevent deleting your own account, and deleting **or** demoting the last remaining super-admin.
+
 ### Two kinds of settings
 
 Seconds keeps design and site configuration separate:

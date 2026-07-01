@@ -26,6 +26,8 @@ use App\Livewire\Shop\ProductList;
 use App\Livewire\Themes\ThemeAdmin;
 use App\Livewire\Themes\ThemeCodeEditor;
 use App\Livewire\Themes\ThemeSettings as ThemeSettingsAdmin;
+use App\Livewire\Users\UserForm;
+use App\Livewire\Users\UserList;
 use App\Models\Page;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -142,6 +144,13 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
 
     // Website settings (general / reading).
     Route::get('/settings', WebsiteSettings::class)->name('admin.settings.index');
+
+    // Users & roles
+    Route::prefix('users')->name('admin.users.')->group(function () {
+        Route::get('/', UserList::class)->name('index');
+        Route::get('/create', UserForm::class)->name('create');
+        Route::get('/{id}/edit', UserForm::class)->name('edit');
+    });
 
     // Menus
     Route::prefix('menus')->name('admin.menus.')->group(function () {
