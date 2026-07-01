@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Sweep overdue unpaid orders back to cancelled + restock (payment window).
 Schedule::command('payments:expire')->everyMinute()->withoutOverlapping();
+
+// Safety net for missed Xendit webhooks - re-check stale pending payments.
+Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping();

@@ -4,6 +4,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\FrontController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\ThemeAssetController;
+use App\Http\Controllers\XenditWebhookController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Content\PageForm;
 use App\Livewire\Content\PageList;
@@ -44,6 +45,9 @@ Route::get('/themes/{slug}/assets/{path}', [ThemeAssetController::class, 'show']
     ->where('slug', '[a-z0-9][a-z0-9\-]*')
     ->where('path', '.*')
     ->name('theme.asset');
+
+// Xendit invoice webhook - public, CSRF-exempt (see bootstrap/app.php), verified via x-callback-token.
+Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle'])->name('webhooks.xendit');
 
 // Front-end: home + blog routes (MUST come before the page catch-all).
 Route::get('/', [FrontController::class, 'home'])->name('home');

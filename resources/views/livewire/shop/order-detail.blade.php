@@ -95,6 +95,28 @@
                 @endif
             </div>
 
+            {{-- Payments --}}
+            @if ($order->payments->isNotEmpty())
+                <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-3">
+                    <h2 class="font-display text-sm font-semibold text-ink">Payments</h2>
+                    @foreach ($order->payments as $payment)
+                        <div wire:key="payment-{{ $payment->id }}" class="flex items-center justify-between gap-2 text-sm">
+                            <div>
+                                <span class="text-ink">{{ $payment->gateway->label() }}</span>
+                                <span class="text-muted">- {{ $payment->status->label() }}</span>
+                                <div class="text-xs text-muted">{{ $payment->formattedAmount() }}</div>
+                            </div>
+                            @if ($payment->gateway->value === 'xendit' && $payment->status->value === 'pending')
+                                <button type="button" wire:click="recheckPayment({{ $payment->id }})"
+                                        class="shrink-0 rounded-[var(--radius-btn)] border border-line px-2 py-1 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                                    Re-check
+                                </button>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             {{-- Customer --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-2">
                 <h2 class="font-display text-sm font-semibold text-ink">Customer</h2>

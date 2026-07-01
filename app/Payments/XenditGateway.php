@@ -95,6 +95,32 @@ class XenditGateway implements PaymentGateway
         );
     }
 
+    /**
+     * Re-query Xendit for a payment's current status - the safety net for a
+     * missed webhook (payments:reconcile command, admin "re-check" button).
+     */
+    public function reconcile(Payment $payment): PaymentEvent
+    {
+        $keys = PaymentSettings::xenditKeys();
+
+        $response = Http::withBasicAuth($keys['secret_key'], '')
+            ->acceptJson()
+            ->get(PaymentSettings::xenditBaseUrl().'/v2/invoices/'.$payment->external_id);
+
+        if ($response->failed()) {
+            throw new \RuntimeException('Could not reconcile Xendit payment '.$payment->external_id);
+        }
+
+        $payload = $response->json();
+
+        return new PaymentEvent(
+            externalId: (string) ($payload['id'] ?? $payment->external_id),
+            status: $this->mapStatus((string) ($payload['status'] ?? '')),
+            signature: sha1(json_encode($payload)),
+            rawPayload: $payload,
+        );
+    }
+
     private function mapStatus(string $xenditStatus): PaymentStatus
     {
         return match (strtoupper($xenditStatus)) {

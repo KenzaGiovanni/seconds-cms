@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff' => EnsureStaff::class,
             'ecommerce' => EnsureEcommerceEnabled::class,
         ]);
+
+        // Xendit posts webhooks without a CSRF token; verified instead via
+        // the x-callback-token header (XenditWebhookController).
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/xendit',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

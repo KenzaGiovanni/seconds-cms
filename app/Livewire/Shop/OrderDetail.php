@@ -3,8 +3,12 @@
 namespace App\Livewire\Shop;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentProvider;
 use App\Enums\Permission;
 use App\Models\Order;
+use App\Models\Payment;
+use App\Payments\PaymentService;
+use App\Payments\XenditGateway;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -17,7 +21,7 @@ class OrderDetail extends Component
     {
         abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
 
-        $this->order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
+        $this->order = Order::with(['items.product', 'items.variant', 'payments'])->findOrFail($id);
     }
 
     public function transitionTo(string $status): void
@@ -37,6 +41,23 @@ class OrderDetail extends Component
         session()->flash('success', 'Order status updated.');
 
         // Customer status-update email (e.g. "paid"/"shipped") is stubbed until mail is configured.
+    }
+
+    public function recheckPayment(int $paymentId, XenditGateway $gateway, PaymentService $payments): void
+    {
+        abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);
+
+        $payment = Payment::findOrFail($paymentId);
+        abort_unless($payment->gateway === PaymentProvider::Xendit, 404);
+
+        try {
+            $payments->applyEvent($gateway->reconcile($payment));
+            session()->flash('success', 'Payment status re-checked with Xendit.');
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+        }
+
+        $this->order->refresh();
     }
 
     public function render()
