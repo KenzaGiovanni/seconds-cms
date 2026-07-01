@@ -18,6 +18,7 @@ class Order extends Model
         'subtotal', 'shipping_total', 'discount_total', 'total', 'currency', 'notes',
         'promotion_id', 'coupon_id', 'coupon_code', 'discount_units',
         'placed_at', 'paid_at', 'fulfilled_at', 'completed_at', 'cancelled_at',
+        'payment_due_at', 'cancellation_reason',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class Order extends Model
         'fulfilled_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'payment_due_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -51,6 +53,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**
