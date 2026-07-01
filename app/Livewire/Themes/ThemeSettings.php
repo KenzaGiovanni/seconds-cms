@@ -51,6 +51,7 @@ class ThemeSettings extends Component
 
         if (! $theme) {
             session()->flash('error', 'No active theme to save settings for.');
+
             return;
         }
 

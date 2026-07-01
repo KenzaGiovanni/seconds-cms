@@ -15,7 +15,14 @@ use App\Livewire\Install\Installer;
 use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
+use App\Livewire\Settings\WebsiteSettings;
+use App\Livewire\Shop\OrderList;
+use App\Livewire\Shop\ProductCategoryForm;
+use App\Livewire\Shop\ProductCategoryList;
+use App\Livewire\Shop\ProductForm;
+use App\Livewire\Shop\ProductList;
 use App\Livewire\Themes\ThemeAdmin;
+use App\Livewire\Themes\ThemeCodeEditor;
 use App\Livewire\Themes\ThemeSettings as ThemeSettingsAdmin;
 use App\Models\Page;
 use App\Models\Post;
@@ -35,6 +42,12 @@ Route::get('/category/{slug}', [FrontController::class, 'category'])
 Route::get('/tag/{slug}', [FrontController::class, 'tag'])
     ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
     ->name('tag.show');
+
+// Storefront shop (ecommerce module - 404 when toggle off, handled in controller).
+Route::get('/shop', [FrontController::class, 'shop'])->name('shop.index');
+Route::get('/shop/{slug}', [FrontController::class, 'product'])
+    ->where('slug', '[A-Za-z0-9][A-Za-z0-9\-]*')
+    ->name('shop.product');
 
 // Public form submission endpoint.
 Route::post('/forms/{slug}', [FormController::class, 'submit'])
@@ -112,6 +125,10 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
     // Themes
     Route::get('/themes', ThemeAdmin::class)->name('admin.themes.index');
     Route::get('/themes/settings', ThemeSettingsAdmin::class)->name('admin.themes.settings');
+    Route::get('/themes/code', ThemeCodeEditor::class)->name('admin.themes.code');
+
+    // Website settings (general / reading).
+    Route::get('/settings', WebsiteSettings::class)->name('admin.settings.index');
 
     // Menus
     Route::prefix('menus')->name('admin.menus.')->group(function () {
@@ -122,8 +139,22 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
 
     // Ecommerce module — gated by the `ecommerce` feature toggle.
     Route::middleware('ecommerce')->prefix('shop')->name('admin.shop.')->group(function () {
-        Route::get('/products', fn () => response()->json(['module' => 'products']))->name('products');
-        Route::get('/orders', fn () => response()->json(['module' => 'orders']))->name('orders');
+        // Products
+        Route::prefix('products')->name('products.')->group(function () {
+            Route::get('/', ProductList::class)->name('index');
+            Route::get('/create', ProductForm::class)->name('create');
+            Route::get('/{id}/edit', ProductForm::class)->name('edit');
+        });
+
+        // Product categories
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/', ProductCategoryList::class)->name('index');
+            Route::get('/create', ProductCategoryForm::class)->name('create');
+            Route::get('/{id}/edit', ProductCategoryForm::class)->name('edit');
+        });
+
+        // Orders (stub — full list/detail in Phase 2.4)
+        Route::get('/orders', OrderList::class)->name('orders.index');
     });
 });
 

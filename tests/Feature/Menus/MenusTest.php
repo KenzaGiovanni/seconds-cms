@@ -2,6 +2,8 @@
 
 use App\Enums\ContentStatus;
 use App\Enums\Role;
+use App\Livewire\Menus\MenuBuilder;
+use App\Livewire\Menus\MenuList;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Page;
@@ -39,7 +41,7 @@ it('creates a menu with a theme location', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class)
+        ->test(MenuBuilder::class)
         ->set('name', 'Main Navigation')
         ->set('location', 'primary')
         ->call('saveMenu')
@@ -55,7 +57,7 @@ it('rejects duplicate location on two menus', function () {
     Menu::create(['name' => 'First', 'location' => 'primary']);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class)
+        ->test(MenuBuilder::class)
         ->set('name', 'Second')
         ->set('location', 'primary')
         ->call('saveMenu')
@@ -71,7 +73,7 @@ it('adds a custom URL item to a menu', function () {
     $menu = Menu::create(['name' => 'Nav', 'location' => null]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class, ['id' => $menu->id])
+        ->test(MenuBuilder::class, ['id' => $menu->id])
         ->set('newLabel', 'Home')
         ->set('newLinkType', 'url')
         ->set('newUrl', '/')
@@ -88,7 +90,7 @@ it('adds a content-linked item to a menu', function () {
     $page = Page::create(['title' => 'About', 'slug' => 'about', 'status' => ContentStatus::Published, 'published_at' => now()->subHour()]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class, ['id' => $menu->id])
+        ->test(MenuBuilder::class, ['id' => $menu->id])
         ->set('newLabel', 'About')
         ->set('newLinkType', 'content')
         ->set('newContentId', $page->id)
@@ -108,7 +110,7 @@ it('adds a nested child item', function () {
     $parent = MenuItem::create(['menu_id' => $menu->id, 'label' => 'Parent', 'url' => '#', 'sort_order' => 0]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class, ['id' => $menu->id])
+        ->test(MenuBuilder::class, ['id' => $menu->id])
         ->set('newLabel', 'Child')
         ->set('newLinkType', 'url')
         ->set('newUrl', '/child')
@@ -126,7 +128,7 @@ it('removes an item from a menu', function () {
     $item = MenuItem::create(['menu_id' => $menu->id, 'label' => 'Remove Me', 'url' => '/', 'sort_order' => 0]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuBuilder::class, ['id' => $menu->id])
+        ->test(MenuBuilder::class, ['id' => $menu->id])
         ->call('removeItem', $item->id);
 
     expect(MenuItem::find($item->id))->toBeNull();
@@ -183,7 +185,7 @@ it('deletes a menu and cascades to items', function () {
     MenuItem::create(['menu_id' => $menu->id, 'label' => 'Item', 'url' => '/', 'sort_order' => 0]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Menus\MenuList::class)
+        ->test(MenuList::class)
         ->call('delete', $menu->id);
 
     expect(Menu::find($menu->id))->toBeNull()

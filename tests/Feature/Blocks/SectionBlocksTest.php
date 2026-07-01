@@ -116,6 +116,49 @@ it('renders a call-to-action block', function () {
         ->assertSee('Contact');
 });
 
+it('renders a richtext block as unescaped html', function () {
+    Page::create([
+        'title' => 'Rich Page',
+        'slug' => 'rich-page',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+        'blocks' => [
+            ['type' => 'richtext', 'data' => ['html' => '<p>Hello <strong>world</strong></p>']],
+        ],
+    ]);
+
+    get('/rich-page')
+        ->assertOk()
+        ->assertSee('richtext-content')
+        ->assertSee('<strong>world</strong>', false);
+});
+
+it('renders a testimonials block with quotes and attribution', function () {
+    Page::create([
+        'title' => 'Reviews',
+        'slug' => 'reviews',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+        'blocks' => [
+            ['type' => 'testimonials', 'data' => [
+                'heading' => 'What clients say',
+                'items' => [
+                    ['quote' => 'Absolutely brilliant.', 'name' => 'Ana Santos', 'role' => 'CEO, Acme'],
+                    ['quote' => 'Delivered on time.', 'name' => 'Budi Hartono', 'role' => 'Founder, Kopi Co'],
+                ],
+            ]],
+        ],
+    ]);
+
+    get('/reviews')
+        ->assertOk()
+        ->assertSee('What clients say')
+        ->assertSee('Absolutely brilliant.')
+        ->assertSee('Ana Santos')
+        ->assertSee('CEO, Acme')
+        ->assertSee('Budi Hartono');
+});
+
 it('seeds a renderable sample page with stacked blocks and a form', function () {
     seed(DemoContentSeeder::class);
 

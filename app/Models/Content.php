@@ -19,7 +19,7 @@ class Content extends Model
     protected $table = 'contents';
 
     protected $fillable = [
-        'type', 'title', 'slug', 'status', 'body', 'blocks',
+        'type', 'template', 'title', 'slug', 'status', 'body', 'blocks',
         'excerpt', 'featured_image_id', 'author_id', 'published_at', 'meta_title', 'meta_description',
     ];
 

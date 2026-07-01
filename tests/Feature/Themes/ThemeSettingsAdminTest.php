@@ -2,8 +2,10 @@
 
 use App\Enums\ContentStatus;
 use App\Enums\Role;
+use App\Livewire\Content\PageForm;
+use App\Livewire\Content\PostForm;
+use App\Livewire\Themes\ThemeSettings;
 use App\Models\Page;
-use App\Models\Post;
 use App\Models\Theme;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -54,14 +56,14 @@ it('saves theme settings and persists them', function () {
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeSettings::class)
+        ->test(ThemeSettings::class)
         ->set('settings.primary_color', '#FF0000')
-        ->set('settings.show_hero', false)
+        ->set('settings.footer_text', 'Made with Seconds')
         ->call('save');
 
     $saved = $theme->fresh()->settings;
     expect($saved['primary_color'])->toBe('#FF0000')
-        ->and($saved['show_hero'])->toBe(false);
+        ->and($saved['footer_text'])->toBe('Made with Seconds');
 });
 
 it('saved theme settings render on the front-end', function () {
@@ -69,7 +71,7 @@ it('saved theme settings render on the front-end', function () {
         'slug' => 'default',
         'name' => 'Seconds Default',
         'status' => 'active',
-        'settings' => ['primary_color' => '#ABCDEF', 'show_hero' => true],
+        'settings' => ['primary_color' => '#ABCDEF'],
         'installed_at' => now(),
     ]);
 
@@ -85,7 +87,7 @@ it('saves blocks on a page and they render on the front-end', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Block Test')
         ->set('slug', 'block-test')
         ->set('status', 'published')
@@ -114,7 +116,7 @@ it('reorders blocks on save', function () {
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class, ['id' => $page->id])
+        ->test(PageForm::class, ['id' => $page->id])
         ->call('moveBlockDown', 0)  // swap First and Second
         ->call('save');
 
@@ -128,7 +130,7 @@ it('removes a block', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Remove Block')
         ->set('slug', 'remove-block')
         ->set('status', 'draft')
@@ -143,7 +145,7 @@ it('saves blocks on a post', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'Post With Block')
         ->set('slug', 'post-with-block')
         ->set('status', 'published')

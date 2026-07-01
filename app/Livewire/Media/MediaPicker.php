@@ -12,6 +12,7 @@ use Livewire\Component;
 class MediaPicker extends Component
 {
     public bool $open = false;
+
     public ?int $selected = null;
 
     public function pick(int $id): void

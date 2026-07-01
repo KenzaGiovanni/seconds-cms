@@ -18,13 +18,18 @@ class MenuBuilder extends Component
     public ?int $menuId = null;
 
     public string $name = '';
+
     public string $location = '';
 
     // New item form
     public string $newLabel = '';
+
     public string $newUrl = '';
+
     public string $newLinkType = 'url';    // 'url' | 'content'
+
     public ?int $newContentId = null;
+
     public ?int $newParentId = null;
 
     public function mount(?int $id = null): void

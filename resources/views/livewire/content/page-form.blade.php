@@ -108,6 +108,27 @@
             <livewire:media.media-picker />
         </div>
 
+        {{-- Template --}}
+            <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-3">
+                <h2 class="font-display text-sm font-semibold text-ink">Template</h2>
+                <select
+                    wire:model="template"
+                    class="w-full rounded-[var(--radius-btn)] border border-line bg-soft px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                    <option value="">Default</option>
+                    <option value="landing">Landing page</option>
+                </select>
+                <p class="text-xs text-muted">Landing uses full-width blocks - best with a Hero as the first block.</p>
+
+                <label class="mt-1 flex cursor-pointer items-start gap-2">
+                    <input type="checkbox" wire:model="isFrontPage"
+                           class="mt-0.5 rounded border-line text-accent focus:ring-accent" />
+                    <span class="text-sm text-ink">Use as homepage
+                        <span class="block text-xs font-normal text-muted">Show this page at the site root (/).</span>
+                    </span>
+                </label>
+            </div>
+
         {{-- Publish box --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">
                 <h2 class="font-display text-sm font-semibold text-ink">Publish</h2>

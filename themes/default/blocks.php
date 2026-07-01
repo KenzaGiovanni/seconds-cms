@@ -23,6 +23,13 @@ return [
         ],
     ],
 
+    'richtext' => [
+        'label' => 'Rich text',
+        'fields' => [
+            ['key' => 'html', 'type' => 'richtext', 'label' => 'Content', 'help' => 'HTML is rendered as-is.'],
+        ],
+    ],
+
     'heading' => [
         'label' => 'Heading',
         'fields' => [
@@ -90,6 +97,18 @@ return [
         'fields' => [
             ['key' => 'slug', 'type' => 'text', 'label' => 'Form slug',
                 'help' => 'The slug of the form to embed (see Forms).'],
+        ],
+    ],
+
+    'testimonials' => [
+        'label' => 'Testimonials',
+        'fields' => [
+            ['key' => 'heading', 'type' => 'text', 'label' => 'Section heading'],
+            ['key' => 'items', 'type' => 'repeater', 'label' => 'Testimonials', 'fields' => [
+                ['key' => 'quote', 'type' => 'textarea', 'label' => 'Quote'],
+                ['key' => 'name', 'type' => 'text', 'label' => 'Name'],
+                ['key' => 'role', 'type' => 'text', 'label' => 'Role / Company'],
+            ]],
         ],
     ],
 

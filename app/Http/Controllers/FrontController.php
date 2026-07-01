@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Content;
 use App\Models\Page;
 use App\Models\Post;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\Tag;
 use App\Support\BlockRenderer;
+use App\Support\Feature;
+use App\Support\SiteSettings;
 use App\Support\ThemeSettings;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class FrontController extends Controller
 {
@@ -18,17 +22,34 @@ class FrontController extends Controller
         private ThemeSettings $themeSettings,
     ) {}
 
-    /** Home page: renders the active theme's home template with recent posts. */
+    /** Home page: a static front page (Website Settings) or the blog feed fallback. */
     public function home(): View
     {
+        $settings = $this->themeSettings->active();
+        $frontPage = SiteSettings::frontPage();
+
+        if ($frontPage) {
+            return view('theme::landing', [
+                'content' => $frontPage,
+                'renderedBlocks' => $this->blocks->render($frontPage->blocks),
+                'themeSettings' => $settings,
+                'seo' => [
+                    'title' => $frontPage->meta_title ?: config('app.name'),
+                    'description' => $frontPage->meta_description,
+                    'canonical' => url('/'),
+                    'og_type' => 'website',
+                    'og_image' => $frontPage->featuredImage?->url(),
+                ],
+            ]);
+        }
+
         $posts = Post::published()->with('categories')->latest('published_at')->take(5)->get();
-        $siteName = config('app.name');
 
         return view('theme::home', [
             'posts' => $posts,
-            'themeSettings' => $this->themeSettings->active(),
+            'themeSettings' => $settings,
             'seo' => [
-                'title' => $siteName,
+                'title' => config('app.name'),
                 'description' => null,
                 'canonical' => url('/'),
                 'og_type' => 'website',
@@ -45,7 +66,7 @@ class FrontController extends Controller
             'posts' => $posts,
             'themeSettings' => $this->themeSettings->active(),
             'seo' => [
-                'title' => 'Blog - ' . config('app.name'),
+                'title' => 'Blog - '.config('app.name'),
                 'description' => null,
                 'canonical' => url('/blog'),
                 'og_type' => 'website',
@@ -63,9 +84,9 @@ class FrontController extends Controller
             'renderedBlocks' => $this->blocks->render($post->blocks),
             'themeSettings' => $this->themeSettings->active(),
             'seo' => [
-                'title' => ($post->meta_title ?: $post->title) . ' - ' . config('app.name'),
+                'title' => ($post->meta_title ?: $post->title).' - '.config('app.name'),
                 'description' => $post->meta_description ?: $post->excerpt,
-                'canonical' => url('/blog/' . $post->slug),
+                'canonical' => url('/blog/'.$post->slug),
                 'og_type' => 'article',
                 'og_image' => $post->featuredImage?->url(),
             ],
@@ -87,9 +108,9 @@ class FrontController extends Controller
             'posts' => $posts,
             'themeSettings' => $this->themeSettings->active(),
             'seo' => [
-                'title' => $category->name . ' - ' . config('app.name'),
+                'title' => $category->name.' - '.config('app.name'),
                 'description' => $category->description,
-                'canonical' => url('/category/' . $category->slug),
+                'canonical' => url('/category/'.$category->slug),
                 'og_type' => 'website',
             ],
         ]);
@@ -110,10 +131,68 @@ class FrontController extends Controller
             'posts' => $posts,
             'themeSettings' => $this->themeSettings->active(),
             'seo' => [
-                'title' => '#' . $tag->name . ' - ' . config('app.name'),
+                'title' => '#'.$tag->name.' - '.config('app.name'),
                 'description' => null,
-                'canonical' => url('/tag/' . $tag->slug),
+                'canonical' => url('/tag/'.$tag->slug),
                 'og_type' => 'website',
+            ],
+        ]);
+    }
+
+    /** Shop index: published product grid, optional category filter. */
+    public function shop(Request $request): View
+    {
+        abort_unless(Feature::ecommerce(), 404);
+
+        $categorySlug = $request->query('category');
+        $activeCategory = $categorySlug
+            ? ProductCategory::where('slug', $categorySlug)->firstOrFail()
+            : null;
+
+        $query = Product::published()->with(['categories', 'featuredImage', 'variants']);
+        if ($activeCategory) {
+            $query->whereHas('categories', fn ($q) => $q->where('product_categories.id', $activeCategory->id));
+        }
+
+        $products = $query->latest()->get();
+        $categories = ProductCategory::whereHas('products', fn ($q) => $q->where('status', 'published'))
+            ->orderBy('name')
+            ->get();
+
+        return view('theme::shop.index', [
+            'products' => $products,
+            'categories' => $categories,
+            'activeCategory' => $activeCategory,
+            'themeSettings' => $this->themeSettings->active(),
+            'seo' => [
+                'title' => 'Shop - '.config('app.name'),
+                'description' => null,
+                'canonical' => url('/shop'),
+                'og_type' => 'website',
+            ],
+        ]);
+    }
+
+    /** Product detail page. Variant selection handled via embedded Livewire component. */
+    public function product(string $slug): View
+    {
+        abort_unless(Feature::ecommerce(), 404);
+
+        $product = Product::published()
+            ->with(['categories', 'featuredImage', 'variants'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return view('theme::shop.product', [
+            'product' => $product,
+            'renderedBlocks' => $this->blocks->render($product->blocks),
+            'themeSettings' => $this->themeSettings->active(),
+            'seo' => [
+                'title' => $product->name.' - '.config('app.name'),
+                'description' => $product->description,
+                'canonical' => url('/shop/'.$product->slug),
+                'og_type' => 'product',
+                'og_image' => $product->featuredImage?->url(),
             ],
         ]);
     }
@@ -123,14 +202,16 @@ class FrontController extends Controller
     {
         $content = Page::published()->with('featuredImage')->where('slug', $slug)->firstOrFail();
 
-        return view('theme::page', [
+        $template = $content->template === 'landing' ? 'theme::landing' : 'theme::page';
+
+        return view($template, [
             'content' => $content,
             'renderedBlocks' => $this->blocks->render($content->blocks),
             'themeSettings' => $this->themeSettings->active(),
             'seo' => [
-                'title' => ($content->meta_title ?: $content->title) . ' - ' . config('app.name'),
+                'title' => ($content->meta_title ?: $content->title).' - '.config('app.name'),
                 'description' => $content->meta_description,
-                'canonical' => url('/' . $content->slug),
+                'canonical' => url('/'.$content->slug),
                 'og_type' => 'website',
                 'og_image' => $content->featuredImage?->url(),
             ],

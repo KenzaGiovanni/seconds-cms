@@ -35,6 +35,9 @@
                         <tr wire:key="{{ $page->id }}">
                             <td class="px-4 py-3 font-medium text-ink">
                                 {{ $page->title }}
+                                @if ($frontPageId === $page->id)
+                                    <span class="ml-2 inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">Homepage</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 font-mono text-xs text-muted">
                                 /{{ $page->slug }}

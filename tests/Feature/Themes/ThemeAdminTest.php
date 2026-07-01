@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\Role;
+use App\Livewire\Themes\ThemeAdmin;
 use App\Models\Theme;
 use App\Models\User;
+use App\Support\ThemeManager;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -41,19 +43,19 @@ it('allows an admin to access themes admin', function () {
 
 function makeThemeZipFile(string $slug = 'test-theme', string $name = 'Test Theme'): UploadedFile
 {
-    $zipPath = sys_get_temp_dir() . '/' . $slug . '-' . uniqid() . '.zip';
+    $zipPath = sys_get_temp_dir().'/'.$slug.'-'.uniqid().'.zip';
 
-    $zip = new \ZipArchive;
-    $zip->open($zipPath, \ZipArchive::CREATE);
-    $zip->addFromString($slug . '/theme.json', json_encode([
-        'name'    => $name,
-        'slug'    => $slug,
+    $zip = new ZipArchive;
+    $zip->open($zipPath, ZipArchive::CREATE);
+    $zip->addFromString($slug.'/theme.json', json_encode([
+        'name' => $name,
+        'slug' => $slug,
         'version' => '1.0.0',
-        'author'  => 'Test Author',
+        'author' => 'Test Author',
     ]));
     $zip->close();
 
-    return UploadedFile::fake()->createWithContent($slug . '.zip', file_get_contents($zipPath));
+    return UploadedFile::fake()->createWithContent($slug.'.zip', file_get_contents($zipPath));
 }
 
 it('installs a theme from a valid ZIP', function () {
@@ -63,14 +65,14 @@ it('installs a theme from a valid ZIP', function () {
     $zip = makeThemeZipFile('my-theme', 'My Theme');
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->set('zipFile', $zip)
         ->call('install');
 
     expect(Theme::where('slug', 'my-theme')->exists())->toBeTrue();
 
     // Clean up installed theme dir.
-    $dest = app(\App\Support\ThemeManager::class)->themesPath('my-theme');
+    $dest = app(ThemeManager::class)->themesPath('my-theme');
     if (is_dir($dest)) {
         File::deleteDirectory($dest);
     }
@@ -82,16 +84,16 @@ it('rejects a ZIP with no theme.json', function () {
 
     $countBefore = Theme::count();
 
-    $zipPath = sys_get_temp_dir() . '/empty-' . uniqid() . '.zip';
-    $zip = new \ZipArchive;
-    $zip->open($zipPath, \ZipArchive::CREATE);
+    $zipPath = sys_get_temp_dir().'/empty-'.uniqid().'.zip';
+    $zip = new ZipArchive;
+    $zip->open($zipPath, ZipArchive::CREATE);
     $zip->addFromString('readme.txt', 'no theme here');
     $zip->close();
 
     $file = UploadedFile::fake()->createWithContent('empty.zip', file_get_contents($zipPath));
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->set('zipFile', $file)
         ->call('install');
 
@@ -106,23 +108,23 @@ it('activates an installed theme', function () {
     $user->assignRole(Role::Admin->value);
 
     $active = Theme::create([
-        'slug'         => 'default',
-        'name'         => 'Default',
-        'status'       => 'active',
-        'settings'     => [],
+        'slug' => 'default',
+        'name' => 'Default',
+        'status' => 'active',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     $other = Theme::create([
-        'slug'         => 'other-theme',
-        'name'         => 'Other Theme',
-        'status'       => 'installed',
-        'settings'     => [],
+        'slug' => 'other-theme',
+        'name' => 'Other Theme',
+        'status' => 'installed',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->call('activate', $other->id);
 
     expect($other->fresh()->status)->toBe('active')
@@ -136,15 +138,15 @@ it('cannot uninstall the active theme', function () {
     $user->assignRole(Role::Admin->value);
 
     $theme = Theme::create([
-        'slug'         => 'default',
-        'name'         => 'Default',
-        'status'       => 'active',
-        'settings'     => [],
+        'slug' => 'default',
+        'name' => 'Default',
+        'status' => 'active',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->call('uninstall', $theme->id);
 
     // Active theme must survive the attempt.
@@ -157,23 +159,23 @@ it('uninstalls a non-active theme and removes it from the DB', function () {
     $user->assignRole(Role::Admin->value);
 
     Theme::create([
-        'slug'         => 'default',
-        'name'         => 'Default',
-        'status'       => 'active',
-        'settings'     => [],
+        'slug' => 'default',
+        'name' => 'Default',
+        'status' => 'active',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     $other = Theme::create([
-        'slug'         => 'removable',
-        'name'         => 'Removable',
-        'status'       => 'installed',
-        'settings'     => [],
+        'slug' => 'removable',
+        'name' => 'Removable',
+        'status' => 'installed',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->call('uninstall', $other->id);
 
     expect(Theme::find($other->id))->toBeNull();
@@ -184,23 +186,23 @@ it('screen reflects state after activate', function () {
     $user->assignRole(Role::Admin->value);
 
     Theme::create([
-        'slug'         => 'default',
-        'name'         => 'Default',
-        'status'       => 'active',
-        'settings'     => [],
+        'slug' => 'default',
+        'name' => 'Default',
+        'status' => 'active',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     $other = Theme::create([
-        'slug'         => 'new-theme',
-        'name'         => 'New Theme',
-        'status'       => 'installed',
-        'settings'     => [],
+        'slug' => 'new-theme',
+        'name' => 'New Theme',
+        'status' => 'installed',
+        'settings' => [],
         'installed_at' => now(),
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Themes\ThemeAdmin::class)
+        ->test(ThemeAdmin::class)
         ->call('activate', $other->id)
         ->assertSee('New Theme');
 });

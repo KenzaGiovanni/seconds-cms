@@ -2,17 +2,16 @@
 
 @section('content')
 
-    {{-- Hero --}}
-    @if(!empty($themeSettings['show_hero']))
-        <section class="hero">
-            <div class="wrap">
-                <h1>{{ $themeSettings['hero_heading'] ?? config('app.name') }}</h1>
-                @if(!empty($themeSettings['hero_subheading']))
-                    <p>{{ $themeSettings['hero_subheading'] }}</p>
-                @endif
-            </div>
-        </section>
-    @endif
+    {{-- Blog-feed home. A static front page (set in Website Settings) renders via
+         the landing template instead; this is the "latest posts" fallback. --}}
+    <section class="archive-header">
+        <div class="wrap">
+            <h1>{{ config('app.name') }}</h1>
+            @if(!empty($themeSettings['footer_text']))
+                <p>{{ $themeSettings['footer_text'] }}</p>
+            @endif
+        </div>
+    </section>
 
     {{-- Latest posts --}}
     @if($posts->isNotEmpty())

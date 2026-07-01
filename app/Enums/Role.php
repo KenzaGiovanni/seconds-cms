@@ -53,12 +53,16 @@ enum Role: string
                 Permission::ThemesManage,
                 Permission::ThemesEditCode,
                 Permission::SettingsManage,
+                Permission::ProductsManage,
+                Permission::OrdersManage,
             ],
             self::Admin => [
                 Permission::ContentManage,
                 Permission::ThemesManage,
                 Permission::SettingsManage,
                 Permission::UsersManage,
+                Permission::ProductsManage,
+                Permission::OrdersManage,
             ],
             self::Editor => [
                 Permission::ContentManage,

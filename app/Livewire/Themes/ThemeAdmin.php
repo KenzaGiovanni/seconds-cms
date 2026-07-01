@@ -4,12 +4,15 @@ namespace App\Livewire\Themes;
 
 use App\Enums\Permission;
 use App\Models\Theme;
+use App\Support\SiteSettings;
 use App\Support\ThemeManager;
+use App\Support\ThemeManifest;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use RuntimeException;
 use ZipArchive;
@@ -20,14 +23,42 @@ class ThemeAdmin extends Component
 {
     use WithFileUploads;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $zipFile = null;
 
     public ?int $confirmingUninstall = null;
 
+    /** Whether the "enable/disable code editor" confirm modal is open. */
+    public bool $confirmingEditorToggle = false;
+
     public function mount(): void
     {
         abort_unless(auth()->user()->can(Permission::ThemesManage->value), 403);
+    }
+
+    public function promptEditorToggle(): void
+    {
+        abort_unless(auth()->user()->can(Permission::ThemesEditCode->value), 403);
+
+        $this->confirmingEditorToggle = true;
+    }
+
+    public function cancelEditorToggle(): void
+    {
+        $this->confirmingEditorToggle = false;
+    }
+
+    public function toggleThemeEditor(): void
+    {
+        abort_unless(auth()->user()->can(Permission::ThemesEditCode->value), 403);
+
+        $now = ! SiteSettings::themeEditorEnabled();
+        SiteSettings::setThemeEditor($now);
+
+        $this->confirmingEditorToggle = false;
+        session()->flash('success', $now
+            ? 'Theme code editor enabled.'
+            : 'Theme code editor disabled.');
     }
 
     public function install(): void
@@ -41,7 +72,7 @@ class ThemeAdmin extends Component
         $manager = app(ThemeManager::class);
 
         // Extract ZIP to a temp dir then validate theme.json before committing.
-        $tmpDir = sys_get_temp_dir() . '/seconds-theme-' . Str::random(8);
+        $tmpDir = sys_get_temp_dir().'/seconds-theme-'.Str::random(8);
         mkdir($tmpDir, 0755, true);
 
         try {
@@ -49,7 +80,7 @@ class ThemeAdmin extends Component
             $result = $zip->open($this->zipFile->getRealPath());
 
             if ($result !== true) {
-                throw new \RuntimeException('Could not open ZIP file.');
+                throw new RuntimeException('Could not open ZIP file.');
             }
 
             $zip->extractTo($tmpDir);
@@ -59,11 +90,11 @@ class ThemeAdmin extends Component
             $themePath = $this->findThemePath($tmpDir);
 
             if (! $themePath) {
-                throw new \RuntimeException('No valid theme.json found in the ZIP.');
+                throw new RuntimeException('No valid theme.json found in the ZIP.');
             }
 
             // Validate manifest before moving.
-            $manifest = \App\Support\ThemeManifest::fromPath($themePath);
+            $manifest = ThemeManifest::fromPath($themePath);
 
             // Move to themes directory.
             $dest = $manager->themesPath($manifest->slug);
@@ -78,7 +109,7 @@ class ThemeAdmin extends Component
 
             session()->flash('success', "Theme \"{$manifest->name}\" installed successfully.");
         } catch (\Throwable $e) {
-            session()->flash('error', 'Install failed: ' . $e->getMessage());
+            session()->flash('error', 'Install failed: '.$e->getMessage());
         } finally {
             File::deleteDirectory($tmpDir);
         }
@@ -132,12 +163,12 @@ class ThemeAdmin extends Component
     private function findThemePath(string $dir): ?string
     {
         // Check root first.
-        if (file_exists($dir . '/theme.json')) {
+        if (file_exists($dir.'/theme.json')) {
             return $dir;
         }
 
         // One level deep.
-        foreach (glob($dir . '/*/theme.json') as $path) {
+        foreach (glob($dir.'/*/theme.json') as $path) {
             return dirname($path);
         }
 
@@ -148,6 +179,7 @@ class ThemeAdmin extends Component
     {
         return view('livewire.themes.theme-admin', [
             'themes' => Theme::orderByRaw("status = 'active' DESC")->orderBy('name')->get(),
+            'editorEnabled' => SiteSettings::themeEditorEnabled(),
         ]);
     }
 }

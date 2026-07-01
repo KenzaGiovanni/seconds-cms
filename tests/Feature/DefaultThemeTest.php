@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\Theme;
+use App\Support\SiteSettings;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
 use function Pest\Laravel\get;
@@ -18,64 +19,43 @@ beforeEach(function () {
     Theme::updateOrCreate(
         ['slug' => 'default'],
         [
-            'name'         => 'Seconds Default',
-            'status'       => 'active',
-            'settings'     => [
-                'primary_color'   => '#16513F',
-                'show_hero'       => true,
-                'hero_heading'    => 'Hello World',
-                'hero_subheading' => 'Test tagline',
-                'footer_text'     => 'Test footer',
+            'name' => 'Seconds Default',
+            'status' => 'active',
+            'settings' => [
+                'primary_color' => '#16513F',
+                'footer_text' => 'Test footer',
             ],
             'installed_at' => now(),
         ]
     );
 });
 
-// -- Home --
+// -- Home (blog-feed fallback, no static front page set) --
 
-it('renders the home page with the hero heading', function () {
-    get('/')->assertOk()->assertSee('Hello World');
-});
-
-it('shows theme tagline in hero', function () {
-    get('/')->assertOk()->assertSee('Test tagline');
+it('renders the home page', function () {
+    get('/')->assertOk();
 });
 
 it('shows latest posts on the home page', function () {
     Post::create([
-        'title'        => 'My First Post',
-        'slug'         => 'my-first-post',
-        'status'       => ContentStatus::Published,
+        'title' => 'My First Post',
+        'slug' => 'my-first-post',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
     ]);
 
     get('/')->assertOk()->assertSee('My First Post');
 });
 
-it('hides hero when show_hero is false', function () {
-    Theme::where('slug', 'default')->update([
-        'settings' => [
-            'primary_color'   => '#16513F',
-            'show_hero'       => false,
-            'hero_heading'    => 'Hello World',
-            'hero_subheading' => 'Test tagline',
-            'footer_text'     => '',
-        ],
-    ]);
-
-    get('/')->assertOk()->assertDontSee('Test tagline');
-});
-
 // -- Page --
 
 it('renders a published page with blocks', function () {
     Page::create([
-        'title'        => 'About Us',
-        'slug'         => 'about-us',
-        'status'       => ContentStatus::Published,
+        'title' => 'About Us',
+        'slug' => 'about-us',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
-        'blocks'       => [
+        'blocks' => [
             ['type' => 'heading',   'data' => ['level' => 2, 'text' => 'Our Story']],
             ['type' => 'paragraph', 'data' => ['text' => 'We started in 2020.']],
         ],
@@ -90,11 +70,11 @@ it('renders a published page with blocks', function () {
 
 it('renders a divider block without erroring', function () {
     Page::create([
-        'title'        => 'Divider Page',
-        'slug'         => 'divider-page',
-        'status'       => ContentStatus::Published,
+        'title' => 'Divider Page',
+        'slug' => 'divider-page',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
-        'blocks'       => [
+        'blocks' => [
             ['type' => 'paragraph', 'data' => ['text' => 'Above.']],
             ['type' => 'divider',   'data' => []],
             ['type' => 'paragraph', 'data' => ['text' => 'Below.']],
@@ -109,11 +89,11 @@ it('renders a divider block without erroring', function () {
 
 it('uses fallback block for unknown types', function () {
     Page::create([
-        'title'        => 'Unknown Block',
-        'slug'         => 'unknown-block',
-        'status'       => ContentStatus::Published,
+        'title' => 'Unknown Block',
+        'slug' => 'unknown-block',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
-        'blocks'       => [
+        'blocks' => [
             ['type' => 'widget_xyz', 'data' => ['foo' => 'bar']],
         ],
     ]);
@@ -127,11 +107,11 @@ it('renders a published post with date and categories', function () {
     $cat = Category::create(['name' => 'Tech', 'slug' => 'tech']);
 
     $post = Post::create([
-        'title'        => 'Laravel Tips',
-        'slug'         => 'laravel-tips',
-        'status'       => ContentStatus::Published,
+        'title' => 'Laravel Tips',
+        'slug' => 'laravel-tips',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subDay(),
-        'blocks'       => [
+        'blocks' => [
             ['type' => 'paragraph', 'data' => ['text' => 'Use Eloquent scopes.']],
         ],
     ]);
@@ -148,9 +128,9 @@ it('renders post tags', function () {
     $tag = Tag::create(['name' => 'php', 'slug' => 'php']);
 
     $post = Post::create([
-        'title'        => 'Tagged Post',
-        'slug'         => 'tagged-post',
-        'status'       => ContentStatus::Published,
+        'title' => 'Tagged Post',
+        'slug' => 'tagged-post',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
     ]);
     $post->tags()->attach($tag->id);
@@ -164,9 +144,9 @@ it('renders post tags', function () {
 
 it('renders the blog index with posts', function () {
     Post::create([
-        'title'        => 'Post Alpha',
-        'slug'         => 'post-alpha',
-        'status'       => ContentStatus::Published,
+        'title' => 'Post Alpha',
+        'slug' => 'post-alpha',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
     ]);
 
@@ -178,9 +158,9 @@ it('renders the blog index with posts', function () {
 it('renders a category archive page', function () {
     $cat = Category::create(['name' => 'Design', 'slug' => 'design', 'description' => 'Design articles']);
     $post = Post::create([
-        'title'        => 'Design Post',
-        'slug'         => 'design-post',
-        'status'       => ContentStatus::Published,
+        'title' => 'Design Post',
+        'slug' => 'design-post',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
     ]);
     $post->categories()->attach($cat->id);
@@ -194,9 +174,9 @@ it('renders a category archive page', function () {
 it('renders a tag archive page', function () {
     $tag = Tag::create(['name' => 'css', 'slug' => 'css']);
     $post = Post::create([
-        'title'        => 'CSS Tricks',
-        'slug'         => 'css-tricks',
-        'status'       => ContentStatus::Published,
+        'title' => 'CSS Tricks',
+        'slug' => 'css-tricks',
+        'status' => ContentStatus::Published,
         'published_at' => now()->subHour(),
     ]);
     $post->tags()->attach($tag->id);
@@ -205,6 +185,85 @@ it('renders a tag archive page', function () {
         ->assertOk()
         ->assertSee('#css')
         ->assertSee('CSS Tricks');
+});
+
+// -- Landing template --
+
+it('renders a landing page with full-width block layout', function () {
+    Page::create([
+        'title' => 'Our Services',
+        'slug' => 'our-services',
+        'template' => 'landing',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+        'blocks' => [
+            ['type' => 'hero', 'data' => ['heading' => 'What we do', 'subheading' => 'End-to-end delivery.']],
+            ['type' => 'cta',  'data' => ['heading' => 'Get started', 'text' => 'Book a call.', 'button_label' => 'Contact', 'button_url' => '/contact']],
+        ],
+    ]);
+
+    get('/our-services')
+        ->assertOk()
+        ->assertSee('landing-blocks')
+        ->assertSee('What we do')
+        ->assertSee('End-to-end delivery.')
+        ->assertSee('Get started');
+});
+
+it('renders default template pages with article-wrap', function () {
+    Page::create([
+        'title' => 'About',
+        'slug' => 'about',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+        'blocks' => [
+            ['type' => 'paragraph', 'data' => ['text' => 'Who we are.']],
+        ],
+    ]);
+
+    get('/about')
+        ->assertOk()
+        ->assertSee('article-wrap')
+        ->assertSee('Who we are.');
+});
+
+it('renders a designated static front page as a landing page', function () {
+    $page = Page::create([
+        'title' => 'Home',
+        'slug' => 'home-landing',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+        'blocks' => [
+            ['type' => 'hero', 'data' => ['heading' => 'Front page hero', 'subheading' => 'Powered by blocks.']],
+        ],
+    ]);
+
+    SiteSettings::setFrontPage($page->id);
+
+    get('/')
+        ->assertOk()
+        ->assertSee('landing-blocks')
+        ->assertSee('Front page hero')
+        ->assertSee('Powered by blocks.');
+});
+
+it('falls back to the posts feed when the front page is a draft or missing', function () {
+    // show_on_front = page, but the target page is unpublished.
+    $page = Page::create([
+        'title' => 'Draft Home',
+        'slug' => 'draft-home',
+        'status' => ContentStatus::Draft,
+    ]);
+    SiteSettings::setFrontPage($page->id);
+
+    Post::create([
+        'title' => 'Feed Post',
+        'slug' => 'feed-post',
+        'status' => ContentStatus::Published,
+        'published_at' => now()->subHour(),
+    ]);
+
+    get('/')->assertOk()->assertSee('Feed Post');
 });
 
 // -- Theme settings resolve --

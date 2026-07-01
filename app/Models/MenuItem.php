@@ -46,6 +46,7 @@ class MenuItem extends Model
                 return route('content.show', $model->slug);
             }
         }
+
         return $this->url ?? '#';
     }
 }

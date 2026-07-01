@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.admin')]
@@ -17,10 +18,11 @@ class MediaLibrary extends Component
 {
     use WithFileUploads;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $upload = null;
 
     public string $altText = '';
+
     public ?int $confirmingDelete = null;
 
     public function mount(): void
@@ -39,7 +41,7 @@ class MediaLibrary extends Component
         $filename = $this->upload->getClientOriginalName();
         $ext = $this->upload->getClientOriginalExtension();
         $slug = Str::slug(pathinfo($filename, PATHINFO_FILENAME));
-        $uniqueName = $slug . '-' . Str::random(6) . '.' . $ext;
+        $uniqueName = $slug.'-'.Str::random(6).'.'.$ext;
         $path = $this->upload->storeAs('media', $uniqueName, 'public');
 
         [$width, $height] = $this->imageSize($path);
@@ -87,8 +89,10 @@ class MediaLibrary extends Component
         $fullPath = Storage::disk('public')->path($path);
         if (function_exists('getimagesize') && @getimagesize($fullPath)) {
             [$w, $h] = getimagesize($fullPath);
+
             return [$w, $h];
         }
+
         return [null, null];
     }
 

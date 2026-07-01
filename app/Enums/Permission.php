@@ -26,6 +26,12 @@ enum Permission: string
     // Manage admin users + their roles.
     case UsersManage = 'users.manage';
 
+    // Ecommerce: products + categories — Phase 2.1.
+    case ProductsManage = 'products.manage';
+
+    // Ecommerce: orders + fulfilment — Phase 2.4.
+    case OrdersManage = 'orders.manage';
+
     public function label(): string
     {
         return match ($this) {
@@ -34,6 +40,8 @@ enum Permission: string
             self::ThemesEditCode => 'Edit theme code',
             self::SettingsManage => 'Manage settings',
             self::UsersManage => 'Manage users',
+            self::ProductsManage => 'Manage products',
+            self::OrdersManage => 'Manage orders',
         };
     }
 

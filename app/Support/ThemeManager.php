@@ -31,6 +31,7 @@ class ThemeManager
         if (! is_dir($path)) {
             return null;
         }
+
         return ThemeManifest::fromPath($path);
     }
 

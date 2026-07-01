@@ -7,6 +7,7 @@ use App\Enums\Permission;
 use App\Livewire\Concerns\WithBlockEditor;
 use App\Models\Content;
 use App\Models\Page;
+use App\Support\SiteSettings;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -35,6 +36,10 @@ class PageForm extends Component
 
     public bool $slugManuallyEdited = false;
 
+    public string $template = '';
+
+    public bool $isFrontPage = false;
+
     public ?int $featuredImageId = null;
 
     public ?string $featuredImageUrl = null;
@@ -53,6 +58,8 @@ class PageForm extends Component
             $this->publishedAt = $page->published_at?->format('Y-m-d\TH:i') ?? '';
             $this->metaTitle = $page->meta_title ?? '';
             $this->metaDescription = $page->meta_description ?? '';
+            $this->template = $page->template ?? '';
+            $this->isFrontPage = SiteSettings::isFrontPage($page->id);
             $this->slugManuallyEdited = true;
             $this->featuredImageId = $page->featured_image_id;
             $this->featuredImageUrl = $page->featuredImage?->url();
@@ -117,6 +124,7 @@ class PageForm extends Component
             'publishedAt' => 'nullable|date',
             'metaTitle' => 'nullable|string|max:255',
             'metaDescription' => 'nullable|string|max:500',
+            'template' => 'nullable|in:,landing',
             'blocks' => 'nullable|array',
         ]);
 
@@ -129,16 +137,25 @@ class PageForm extends Component
             'published_at' => $data['publishedAt'] ? now()->parse($data['publishedAt']) : null,
             'meta_title' => $data['metaTitle'] ?: null,
             'meta_description' => $data['metaDescription'] ?: null,
+            'template' => $data['template'] ?: null,
             'featured_image_id' => $this->featuredImageId,
             'author_id' => auth()->id(),
         ];
 
         if ($this->pageId) {
-            Page::findOrFail($this->pageId)->update($payload);
+            $page = Page::findOrFail($this->pageId);
+            $page->update($payload);
             session()->flash('success', 'Page updated.');
         } else {
-            Page::create($payload);
+            $page = Page::create($payload);
             session()->flash('success', 'Page created.');
+        }
+
+        // Front-page selection: set this page, or release it if it was the front page.
+        if ($this->isFrontPage) {
+            SiteSettings::setFrontPage($page->id);
+        } elseif (SiteSettings::frontPageId() === $page->id) {
+            SiteSettings::setFrontPage(null);
         }
 
         $this->redirect(route('admin.pages.index'), navigate: true);

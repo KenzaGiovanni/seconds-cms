@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\Role;
+use App\Livewire\Content\PageForm;
+use App\Livewire\Media\MediaLibrary;
+use App\Livewire\Media\MediaPicker;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\User;
@@ -41,7 +44,7 @@ it('uploads a file and stores a media row', function () {
     $file = UploadedFile::fake()->image('test-photo.jpg', 800, 600);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Media\MediaLibrary::class)
+        ->test(MediaLibrary::class)
         ->set('upload', $file)
         ->set('altText', 'A test photo')
         ->call('store');
@@ -61,7 +64,7 @@ it('validates that upload is required', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Media\MediaLibrary::class)
+        ->test(MediaLibrary::class)
         ->call('store')
         ->assertHasErrors(['upload']);
 });
@@ -73,7 +76,7 @@ it('rejects files over 10 MB', function () {
     $file = UploadedFile::fake()->create('big.jpg', 11000, 'image/jpeg'); // 11 MB
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Media\MediaLibrary::class)
+        ->test(MediaLibrary::class)
         ->set('upload', $file)
         ->call('store')
         ->assertHasErrors(['upload']);
@@ -98,7 +101,7 @@ it('deletes a media row and its file', function () {
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Media\MediaLibrary::class)
+        ->test(MediaLibrary::class)
         ->call('delete', $media->id);
 
     expect(Media::find($media->id))->toBeNull();
@@ -121,7 +124,7 @@ it('picker dispatches media-selected event when an item is clicked', function ()
     ]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Media\MediaPicker::class)
+        ->test(MediaPicker::class)
         ->set('open', true)
         ->call('pick', $media->id)
         ->assertDispatched('media-selected', id: $media->id);
@@ -143,7 +146,7 @@ it('saves featured_image_id on a page', function () {
     ]);
 
     $component = Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'With Image')
         ->set('slug', 'with-image')
         ->set('status', 'draft')

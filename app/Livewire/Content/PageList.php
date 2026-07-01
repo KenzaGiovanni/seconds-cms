@@ -4,6 +4,7 @@ namespace App\Livewire\Content;
 
 use App\Enums\Permission;
 use App\Models\Page;
+use App\Support\SiteSettings;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -43,6 +44,7 @@ class PageList extends Component
     {
         return view('livewire.content.page-list', [
             'pages' => Page::latest()->get(),
+            'frontPageId' => SiteSettings::showOnFront() === 'page' ? SiteSettings::frontPageId() : null,
         ]);
     }
 }

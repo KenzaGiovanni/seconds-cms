@@ -98,6 +98,18 @@ if (Feature::ecommerce()) {
 
 Flip it by setting the `ecommerce` value to `true` in the `settings` table (admin UI lands in a later phase). When off, ecommerce routes 404 and the shop nav is hidden.
 
+### Catalog admin
+
+With ecommerce on, `/admin/shop/products` and `/admin/shop/categories` give staff with the `products.manage` permission full CRUD:
+
+- **Products** - simple (single price/sku/stock) or variable (multiple variants, each with its own price/sku/stock and up to two option pairs like Size/Color). Rich description via the same block-editor engine as pages/posts, featured image, category assignment, and a per-product stock policy (don't track / deny when out / allow backorder).
+- **Product categories** - flat or nested (parent/child), assignable to products via checkboxes.
+- **Orders** - admin surface exists (`/admin/shop/orders`, `orders.manage` permission) but is a placeholder until checkout ships in Phase 2.4.
+
+### Storefront
+
+`/shop` lists published, in-stock-aware products (grid, optional `?category=slug` filter) and `/shop/{slug}` is the product detail page. Variant selection and stock/price display are handled by an embedded Livewire widget (`App\Livewire\Shop\ProductDetail`) so switching a variant updates price/stock without a full page reload. Both routes 404 when the ecommerce toggle is off or the product isn't published. Cart + checkout are Phase 2.3/2.4 - the "Add to cart" button is present but not yet wired.
+
 ## Themes
 
 A theme is a folder under `themes/<slug>/`:
@@ -111,6 +123,25 @@ themes/default/
 
 The active theme's views are registered under the `theme::` Blade namespace by `App\Support\ThemeManager`. The default theme is always registered as the base/fallback and the active theme is prepended so its templates override it. Exactly one theme is active at a time; activating one deactivates the rest in a transaction, and the active theme cannot be uninstalled. A theme's effective settings are resolved by `App\Support\ThemeSettings` - `theme.json` defaults merged with stored overrides.
 
+### Two kinds of settings
+
+Seconds keeps design and site configuration separate:
+
+- **Customize** (`/admin/themes/settings`) - per-theme **design tokens** from the active theme's `theme.json` (e.g. `primary_color`, `footer_text`). Resolved by `App\Support\ThemeSettings`. These follow the theme.
+- **Website Settings** (`/admin/settings`) - site-level configuration in the `settings` table, resolved by `App\Support\SiteSettings`: site name/tagline/email, timezone (applied via `AppServiceProvider`), date format, posts-per-page, and the homepage choice (latest posts vs a static page). These survive theme switches.
+
+### Theme code editor (optional, off by default)
+
+An in-admin editor at `/admin/themes/code` for reading and writing theme template files (Blade/CSS/JS/JSON) - FTP-like, without leaving the admin. Because Blade compiles to PHP, editing a template is effectively running code on the server, so it is locked down:
+
+- **Off by default.** Turn it on from the **Themes** admin page - a "Theme code editor" card with an Enable button and an "are you sure" confirmation. It stores the `theme_editor_enabled` site setting; no server/env change needed.
+- Both the toggle and the editor are gated to the `themes.edit_code` permission (developer / super-admin only). A plain admin can't enable or use it.
+- Every read/write is `realpath`-jailed to the `themes/` directory and limited to a whitelist of extensions (`config/seconds.php`).
+- Saves back up the previous version to `storage/app/theme-backups` and are logged.
+- The editor screen carries a prominent "for coders only" warning; a broken template runs on the live site.
+
+Day to day the developer edits theme files directly in their own editor; this is a convenience for quick live tweaks.
+
 ## Content & front-end rendering
 
 Pages and posts share one `contents` table, distinguished by a `type` discriminator (STI-lite). Query type-scoped via the `Page` / `Post` models, or cross-type via the `Content` base model. Content is `draft` / `published` / `scheduled`; the `published()` scope gates on status **and** publish time.
@@ -123,19 +154,19 @@ Rich content is stored as **blocks** - an ordered `blocks` json array of `{ type
 
 ```
 app/
-  Enums/             # Role, Permission, ContentStatus
-  Http/Controllers/  # FrontController (home + slug rendering)
+  Enums/             # Role, Permission, ContentStatus, ProductType/Status, StockPolicy, OrderStatus
+  Http/Controllers/  # FrontController (home + slug rendering + shop)
   Http/Middleware/   # EnsureStaff, EnsureEcommerceEnabled
-  Livewire/          # Auth, Dashboard, Installer
-  Models/            # User, Setting, Theme, Content (+ Page, Post)
-  Support/           # Feature, ThemeManager, ThemeManifest, ThemeSettings, BlockRenderer
+  Livewire/          # Auth, Dashboard, Installer, Shop (catalog admin + storefront widget)
+  Models/            # User, Setting, Theme, Content (+ Page, Post), Product(+Variant/Category), Order(+Item), Cart(+Item)
+  Support/           # Feature, ThemeManager, ThemeManifest, ThemeSettings, BlockRenderer, Money
 database/
   migrations/
   seeders/           # RolesAndPermissions, Settings, DatabaseSeeder
 themes/
-  default/           # ships pre-installed + active; base layout, page/post/home, block partials
+  default/           # ships pre-installed + active; base layout, page/post/home, block partials, shop templates
 tests/
-  Feature/           # Auth, Settings, Themes, Install, Content
+  Feature/           # Auth, Settings, Themes, Install, Content, Ecommerce
 ```
 
 ## Authoring model: theme-defined blocks
@@ -154,7 +185,7 @@ Page layout is composed from **blocks**, and blocks are defined by the **theme**
 ],
 ```
 
-The admin **auto-generates the editor form** from that schema (`BlockRegistry` reads the active theme; the page/post editor renders an input per field type). Field types: `text`, `textarea`, `richtext`, `email`, `image`, `number`, `toggle`, `select`, and `repeater` (nested groups - e.g. a feature grid's cards). To add a block: declare it in `blocks.php` and ship a partial of the same name. The default theme ships Hero, Feature grid, Gallery, CTA, Image, Form, Heading, Paragraph, and Divider as the reference set.
+The admin **auto-generates the editor form** from that schema (`BlockRegistry` reads the active theme; the page/post editor renders an input per field type). Field types: `text`, `textarea`, `richtext`, `email`, `image`, `number`, `toggle`, `select`, and `repeater` (nested groups - e.g. a feature grid's cards). To add a block: declare it in `blocks.php` and ship a partial of the same name. The default theme ships Hero, Feature grid, Gallery, CTA, Image, Rich text, Testimonials, Form, Heading, Paragraph, and Divider as the reference set.
 
 ## Forms
 
@@ -175,7 +206,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), and Phase 1.5 (Block system v2 + Forms) are **complete**. Test suite: **189/189 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, and the site-settings restructure + theme code editor are **complete**. Phase 2 (Ecommerce) is **in progress** - data model + state machine (2.0), catalog admin (2.1), and storefront catalog (2.2) are done; cart, checkout/orders, and inventory polish (2.3-2.5) are next. Test suite: **254/254 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -185,13 +216,20 @@ What's shipped:
 - **Forms**: builder, submissions, `@form` directive + Form block, honeypot
 - Front-end rendering: home, page, post, blog listing, category + tag archives
 - SEO head (OG, canonical, noindex), /sitemap.xml, /robots.txt
-- Default theme: full Option B design system + a styled section-block library (Hero, Features, Gallery, CTA)
+- **Default theme**: full Option B design system + block library (Hero, Features, Gallery, CTA, Rich text, Testimonials, Image, Form, Heading, Paragraph, Divider)
+- **Landing page template**: set any page to `template=landing` for full-width block rendering (no 720px article constraint) - ideal for homepages and marketing pages
+- **Website Settings** (`/admin/settings`): site name, tagline, admin email, timezone (applied app-wide), date format, posts-per-page, and the WordPress-style Reading choice - homepage shows your latest posts or a static page
+- **Front page**: pick a static page as your homepage from Website Settings, or the "Use as homepage" toggle on the page editor; the Pages list flags it with a "Homepage" badge. A default Home page is seeded on install.
+- **Theme code editor** (`/admin/themes/code`): optional in-admin editing of theme files - see below
+- **Ecommerce data model** (2.0): Product/ProductVariant/ProductCategory, Order/OrderItem, Cart/CartItem, `Money` integer-minor-units support (IDR), full order state machine (pending -> awaiting_payment -> paid -> fulfilled -> completed, + cancelled/refunded)
+- **Catalog admin** (2.1): product + category CRUD (`/admin/shop/products`, `/admin/shop/categories`), simple + variable products with a variant editor, stock policies, category assignment - see "Catalog admin" above
+- **Storefront catalog** (2.2): `/shop` grid with category filter, `/shop/{slug}` product detail page with a Livewire variant-selection widget - see "Storefront" above
 
 Roadmap (see the spec for detail):
 
 1. **Phase 1** - Core CMS - **DONE**
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
-3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders.
+3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **IN PROGRESS** (2.0 data model, 2.1 catalog admin, 2.2 storefront catalog done; 2.3 cart, 2.4 checkout/orders, 2.5 polish next).
 4. **Phase 3** - Payments (Xendit).
 5. **Phase 4** - Delivery (KiriminAja).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs.

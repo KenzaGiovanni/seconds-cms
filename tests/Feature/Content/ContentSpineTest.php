@@ -68,7 +68,7 @@ it('merges theme.json defaults with stored overrides', function () {
     $settings = app(ThemeSettings::class)->for($theme);
 
     expect($settings['primary_color'])->toBe('#000000') // override wins
-        ->and($settings['show_hero'])->toBeTrue();        // default preserved
+        ->and($settings['footer_text'])->toBe('');        // default preserved
 });
 
 it('active() returns empty settings when no theme is active', function () {

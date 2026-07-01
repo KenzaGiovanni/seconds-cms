@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Menu;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\BlockRegistry;
 use App\Support\ThemeManager;
@@ -25,6 +26,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return $user->isSuperAdmin() ? true : null;
         });
+
+        // Apply the configured site timezone (skip if settings table not yet created).
+        try {
+            $tz = Setting::get('timezone');
+            if ($tz) {
+                config(['app.timezone' => $tz]);
+                date_default_timezone_set($tz);
+            }
+        } catch (QueryException) {
+            // Settings table doesn't exist yet (pre-migration / fresh install).
+        }
 
         // Register the active theme's Blade view namespace (skip if table not yet created).
         try {

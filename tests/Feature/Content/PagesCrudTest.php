@@ -2,6 +2,8 @@
 
 use App\Enums\ContentStatus;
 use App\Enums\Role;
+use App\Livewire\Content\PageForm;
+use App\Livewire\Content\PageList;
 use App\Models\Content;
 use App\Models\Page;
 use App\Models\User;
@@ -59,7 +61,7 @@ it('creates a page and redirects to the list', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Our Story')
         ->set('slug', 'our-story')
         ->set('body', 'We started in 2020.')
@@ -76,7 +78,7 @@ it('auto-generates slug from title when slug is not manually edited', function (
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Hello World')
         ->assertSet('slug', 'hello-world');
 });
@@ -86,7 +88,7 @@ it('preserves manually edited slug when title changes', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Hello World')
         ->set('slug', 'custom-slug')  // manual edit marks slugManuallyEdited = true
         ->set('title', 'New Title')   // should NOT overwrite custom-slug
@@ -100,7 +102,7 @@ it('rejects a duplicate slug', function () {
     Page::create(['title' => 'Existing', 'slug' => 'existing', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Other Page')
         ->set('slug', 'existing')
         ->set('status', 'draft')
@@ -113,7 +115,7 @@ it('requires a title', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', '')
         ->set('slug', 'no-title')
         ->set('status', 'draft')
@@ -130,7 +132,7 @@ it('loads an existing page for editing', function () {
     $page = Page::create(['title' => 'Team', 'slug' => 'team', 'status' => ContentStatus::Draft, 'body' => 'We are a team.']);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class, ['id' => $page->id])
+        ->test(PageForm::class, ['id' => $page->id])
         ->assertSet('title', 'Team')
         ->assertSet('slug', 'team')
         ->assertSet('body', 'We are a team.');
@@ -143,7 +145,7 @@ it('updates an existing page', function () {
     $page = Page::create(['title' => 'Old Title', 'slug' => 'old-title', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class, ['id' => $page->id])
+        ->test(PageForm::class, ['id' => $page->id])
         ->set('title', 'New Title')
         ->set('slug', 'new-title')
         ->call('save')
@@ -160,7 +162,7 @@ it('allows editing a page without changing its slug (same slug is OK)', function
     $page = Page::create(['title' => 'Services', 'slug' => 'services', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class, ['id' => $page->id])
+        ->test(PageForm::class, ['id' => $page->id])
         ->set('title', 'Our Services')
         ->call('save')
         ->assertHasNoErrors();
@@ -175,7 +177,7 @@ it('deletes a page', function () {
     $page = Page::create(['title' => 'Delete Me', 'slug' => 'delete-me', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageList::class)
+        ->test(PageList::class)
         ->call('delete', $page->id);
 
     expect(Page::find($page->id))->toBeNull();
@@ -188,7 +190,7 @@ it('a published page renders on the front-end after creation', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'Privacy Policy')
         ->set('slug', 'privacy')
         ->set('body', 'Your data is safe.')
@@ -209,7 +211,7 @@ it('saves SEO fields', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PageForm::class)
+        ->test(PageForm::class)
         ->set('title', 'About')
         ->set('slug', 'about')
         ->set('status', 'draft')

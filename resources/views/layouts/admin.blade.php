@@ -66,19 +66,46 @@
                        @class([$navItem, $navActive => request()->routeIs('admin.themes.settings'), $navIdle => ! request()->routeIs('admin.themes.settings')])>
                         Customize
                     </a>
+                    @if(\App\Support\SiteSettings::themeEditorEnabled())
+                        @can(\App\Enums\Permission::ThemesEditCode->value)
+                            <a href="{{ route('admin.themes.code') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.themes.code'), $navIdle => ! request()->routeIs('admin.themes.code')])>
+                                Theme Code
+                            </a>
+                        @endcan
+                    @endif
                 @endcan
 
-                {{-- Shop (visible only when the ecommerce toggle is on) --}}
+                {{-- Settings --}}
+                @can(\App\Enums\Permission::SettingsManage->value)
+                    <p class="{{ $sectionLabel }} mt-4">Settings</p>
+                    <a href="{{ route('admin.settings.index') }}"
+                       @class([$navItem, $navActive => request()->routeIs('admin.settings.*'), $navIdle => ! request()->routeIs('admin.settings.*')])>
+                        Website
+                    </a>
+                @endcan
+
+                {{-- Shop (visible only when the ecommerce toggle is on + user has shop access) --}}
                 @if(\App\Support\Feature::ecommerce())
-                    <p class="{{ $sectionLabel }} mt-4">Shop</p>
-                    <a href="{{ route('admin.shop.products') }}"
-                       @class([$navItem, $navActive => request()->routeIs('admin.shop.products'), $navIdle => ! request()->routeIs('admin.shop.products')])>
-                        Products
-                    </a>
-                    <a href="{{ route('admin.shop.orders') }}"
-                       @class([$navItem, $navActive => request()->routeIs('admin.shop.orders'), $navIdle => ! request()->routeIs('admin.shop.orders')])>
-                        Orders
-                    </a>
+                    @canany([\App\Enums\Permission::ProductsManage->value, \App\Enums\Permission::OrdersManage->value])
+                        <p class="{{ $sectionLabel }} mt-4">Shop</p>
+                        @can(\App\Enums\Permission::ProductsManage->value)
+                            <a href="{{ route('admin.shop.products.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.products.*'), $navIdle => ! request()->routeIs('admin.shop.products.*')])>
+                                Products
+                            </a>
+                            <a href="{{ route('admin.shop.categories.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.categories.*'), $navIdle => ! request()->routeIs('admin.shop.categories.*')])>
+                                Categories
+                            </a>
+                        @endcan
+                        @can(\App\Enums\Permission::OrdersManage->value)
+                            <a href="{{ route('admin.shop.orders.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.orders.*'), $navIdle => ! request()->routeIs('admin.shop.orders.*')])>
+                                Orders
+                            </a>
+                        @endcan
+                    @endcanany
                 @endif
             </nav>
         </aside>

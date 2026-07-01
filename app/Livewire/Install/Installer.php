@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\Setting;
 use App\Models\Theme;
 use App\Models\User;
+use App\Support\DefaultContent;
 use App\Support\ThemeManager;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\SettingsSeeder;
@@ -63,6 +64,9 @@ class Installer extends Component
             $theme = $manager->install($defaultPath);
             $manager->activate($theme);
         }
+
+        // Seed a default static home page + set it as the front page.
+        DefaultContent::ensureHomePage();
 
         // Create super-admin.
         $user = User::create([

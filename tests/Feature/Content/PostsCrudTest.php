@@ -2,6 +2,8 @@
 
 use App\Enums\ContentStatus;
 use App\Enums\Role;
+use App\Livewire\Content\PostForm;
+use App\Livewire\Content\PostList;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
@@ -39,7 +41,7 @@ it('creates a post and redirects to the list', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'My First Post')
         ->set('slug', 'my-first-post')
         ->set('body', 'Hello world.')
@@ -55,7 +57,7 @@ it('auto-generates slug from title', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'Laravel Tips and Tricks')
         ->assertSet('slug', 'laravel-tips-and-tricks');
 });
@@ -67,7 +69,7 @@ it('assigns categories to a post on save', function () {
     $cat = Category::create(['name' => 'Tech', 'slug' => 'tech']);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'Tech Post')
         ->set('slug', 'tech-post')
         ->set('status', 'draft')
@@ -83,7 +85,7 @@ it('creates and assigns tags on save', function () {
     $user->assignRole(Role::Admin->value);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'Tagged Post')
         ->set('slug', 'tagged-post')
         ->set('status', 'draft')
@@ -102,7 +104,7 @@ it('reuses an existing tag instead of creating a duplicate', function () {
     Tag::create(['name' => 'laravel', 'slug' => 'laravel']);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class)
+        ->test(PostForm::class)
         ->set('title', 'Another Post')
         ->set('slug', 'another-post')
         ->set('status', 'draft')
@@ -126,13 +128,13 @@ it('loads an existing post for editing with its taxonomy', function () {
     );
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class, ['id' => $post->id])
+        ->test(PostForm::class, ['id' => $post->id])
         ->assertSet('title', 'A Post')
         ->assertSet('slug', 'a-post')
         ->assertSet('tagInput', 'ui');
 
     expect(collect(Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class, ['id' => $post->id])
+        ->test(PostForm::class, ['id' => $post->id])
         ->get('selectedCategories'))->contains($cat->id))->toBeTrue();
 });
 
@@ -143,7 +145,7 @@ it('updates a post', function () {
     $post = Post::create(['title' => 'Old', 'slug' => 'old-post', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostForm::class, ['id' => $post->id])
+        ->test(PostForm::class, ['id' => $post->id])
         ->set('title', 'Updated')
         ->set('slug', 'updated-post')
         ->call('save')
@@ -161,7 +163,7 @@ it('deletes a post', function () {
     $post = Post::create(['title' => 'Delete Me', 'slug' => 'delete-post', 'status' => ContentStatus::Draft]);
 
     Livewire::actingAs($user)
-        ->test(\App\Livewire\Content\PostList::class)
+        ->test(PostList::class)
         ->call('delete', $post->id);
 
     expect(Post::find($post->id))->toBeNull();

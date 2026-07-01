@@ -98,4 +98,73 @@
             </tbody>
         </table>
     </div>
+
+    {{-- Theme code editor (developer / super-admin only) --}}
+    @can(\App\Enums\Permission::ThemesEditCode->value)
+        <div class="mt-8 rounded-[var(--radius-btn)] border border-line bg-bg p-5">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="font-display text-sm font-semibold text-ink">Theme code editor</h2>
+                    <p class="mt-1 max-w-lg text-xs text-muted">
+                        Edit theme template files directly from the admin. This is advanced - a broken
+                        template can take the site down, and editing code runs on the live server.
+                        For developers only.
+                    </p>
+                    <p class="mt-2 text-xs">
+                        Status:
+                        @if ($editorEnabled)
+                            <span class="font-medium text-accent">Enabled</span>
+                            &middot; <a href="{{ route('admin.themes.code') }}" wire:navigate class="text-accent hover:underline">Open editor</a>
+                        @else
+                            <span class="font-medium text-muted">Disabled</span>
+                        @endif
+                    </p>
+                </div>
+                <button type="button" wire:click="promptEditorToggle"
+                        @class([
+                            'shrink-0 rounded-[var(--radius-btn)] px-4 py-2 font-display text-sm font-medium transition',
+                            'border border-line text-ink hover:bg-soft' => $editorEnabled,
+                            'bg-accent text-white hover:bg-accent/90' => ! $editorEnabled,
+                        ])>
+                    {{ $editorEnabled ? 'Disable' : 'Enable' }}
+                </button>
+            </div>
+        </div>
+
+        {{-- Confirm modal --}}
+        @if ($confirmingEditorToggle)
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" wire:click.self="cancelEditorToggle">
+                <div class="w-full max-w-md rounded-[var(--radius-card)] border border-line bg-bg p-6 shadow-xl">
+                    <h3 class="font-display text-lg font-semibold tracking-tight text-ink">
+                        {{ $editorEnabled ? 'Disable the theme code editor?' : 'Enable the theme code editor?' }}
+                    </h3>
+                    @if ($editorEnabled)
+                        <p class="mt-2 text-sm text-muted">
+                            The Theme Code screen will be hidden and locked. You can turn it back on here at any time.
+                        </p>
+                    @else
+                        <p class="mt-2 text-sm text-muted">
+                            This lets developer / super-admin users edit theme code from the browser. Because
+                            templates run on the live server, a mistake can break your site. Only enable this
+                            if you know what you are doing.
+                        </p>
+                    @endif
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button type="button" wire:click="cancelEditorToggle"
+                                class="rounded-[var(--radius-btn)] border border-line px-4 py-2 font-display text-sm font-medium text-ink transition hover:bg-soft">
+                            Cancel
+                        </button>
+                        <button type="button" wire:click="toggleThemeEditor"
+                                @class([
+                                    'rounded-[var(--radius-btn)] px-4 py-2 font-display text-sm font-medium text-white transition',
+                                    'bg-red-600 hover:bg-red-700' => $editorEnabled,
+                                    'bg-accent hover:bg-accent/90' => ! $editorEnabled,
+                                ])>
+                            {{ $editorEnabled ? 'Yes, disable' : 'Yes, enable' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endcan
 </div>
