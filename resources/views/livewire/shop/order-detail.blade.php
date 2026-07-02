@@ -51,7 +51,7 @@
 
             {{-- Shipping / billing --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4">
-                <h2 class="mb-2 font-display text-sm font-semibold text-ink">Shipping address</h2>
+                <h2 class="mb-2 font-display text-sm font-semibold text-ink">Billing & Shipping address</h2>
                 <p class="text-sm text-muted">{{ $order->shipping_address['address_line'] ?? '-' }}</p>
                 <p class="text-sm text-muted">{{ $order->shipping_address['city'] ?? '' }}, {{ $order->shipping_address['postal_code'] ?? '' }}</p>
             </div>

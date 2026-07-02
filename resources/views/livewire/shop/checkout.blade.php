@@ -22,7 +22,7 @@
                 @error('phone') <p class="field-error">{{ $message }}</p> @enderror
             </div>
 
-            <h2 class="checkout-heading">Shipping address</h2>
+            <h2 class="checkout-heading">Billing & Shipping address</h2>
             <div class="checkout-field">
                 <label>Address</label>
                 <input type="text" wire:model="addressLine">
