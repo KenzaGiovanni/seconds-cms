@@ -2,6 +2,7 @@
 
 namespace App\Delivery;
 
+use App\Support\ApiLogger;
 use KiriminAja\Base\Config\KiriminAjaConfig;
 use KiriminAja\Models\RequestPickupData;
 use KiriminAja\Models\ShippingPriceData;
@@ -15,6 +16,9 @@ use KiriminAja\Services\KiriminAja;
  * rather than trying to intercept the SDK's internal Guzzle client. Every
  * public method returns the raw `data` payload on success and throws on
  * failure, so callers (KiriminAjaProvider) never touch ServiceResponse.
+ *
+ * Every call is logged via ApiLogger::kiriminaja() (request + response,
+ * success or failure) - see App\Support\ApiLogger.
  */
 class KiriminAjaClient
 {
@@ -33,61 +37,61 @@ class KiriminAjaClient
     /** @return array<string, mixed> */
     public function price(ShippingPriceData $data): array
     {
-        return $this->unwrap(KiriminAja::getPrice($data));
+        return $this->unwrap(ApiLogger::kiriminaja('shipping_price', $data->toArray(), fn () => KiriminAja::getPrice($data)));
     }
 
     /** @return array<string, mixed> */
     public function requestPickup(RequestPickupData $data): array
     {
-        return $this->unwrap(KiriminAja::requestPickup($data));
+        return $this->unwrap(ApiLogger::kiriminaja('request_pickup', $data->toArray(), fn () => KiriminAja::requestPickup($data)));
     }
 
     /** @return array<string, mixed> */
     public function tracking(string $orderId): array
     {
-        return $this->unwrap(KiriminAja::getTracking($orderId));
+        return $this->unwrap(ApiLogger::kiriminaja('tracking', ['order_id' => $orderId], fn () => KiriminAja::getTracking($orderId)));
     }
 
     /** @return array<string, mixed> */
     public function cancel(string $awb, string $reason): array
     {
-        return $this->unwrap(KiriminAja::cancelShipment($awb, $reason));
+        return $this->unwrap(ApiLogger::kiriminaja('cancel_shipment', ['awb' => $awb, 'reason' => $reason], fn () => KiriminAja::cancelShipment($awb, $reason)));
     }
 
     /** @return array<string, mixed> */
     public function creditBalance(): array
     {
-        return $this->unwrap(KiriminAja::getCreditBalance());
+        return $this->unwrap(ApiLogger::kiriminaja('credit_balance', [], fn () => KiriminAja::getCreditBalance()));
     }
 
     /** @return array<string, mixed> */
     public function setCallback(string $url): array
     {
-        return $this->unwrap(KiriminAja::setCallback($url));
+        return $this->unwrap(ApiLogger::kiriminaja('set_callback', ['url' => $url], fn () => KiriminAja::setCallback($url)));
     }
 
     /** @return array<string, mixed> */
     public function provinces(): array
     {
-        return $this->unwrap(KiriminAja::getProvince());
+        return $this->unwrap(ApiLogger::kiriminaja('province', [], fn () => KiriminAja::getProvince()));
     }
 
     /** @return array<string, mixed> */
     public function cities(int $provinceId): array
     {
-        return $this->unwrap(KiriminAja::getCity($provinceId));
+        return $this->unwrap(ApiLogger::kiriminaja('city', ['province_id' => $provinceId], fn () => KiriminAja::getCity($provinceId)));
     }
 
     /** @return array<string, mixed> */
     public function districts(int $cityId): array
     {
-        return $this->unwrap(KiriminAja::getDistrict($cityId));
+        return $this->unwrap(ApiLogger::kiriminaja('district', ['city_id' => $cityId], fn () => KiriminAja::getDistrict($cityId)));
     }
 
     /** @return array<string, mixed> */
     public function subdistricts(int $districtId): array
     {
-        return $this->unwrap(KiriminAja::getSubDistrict($districtId));
+        return $this->unwrap(ApiLogger::kiriminaja('subdistrict', ['district_id' => $districtId], fn () => KiriminAja::getSubDistrict($districtId)));
     }
 
     /**

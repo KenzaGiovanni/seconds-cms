@@ -4,11 +4,13 @@ use App\Delivery\Address;
 use App\Delivery\KiriminAjaClient;
 use App\Delivery\KiriminAjaProvider;
 use App\Delivery\Parcel;
+use App\Enums\ManualDeliveryMode;
 use App\Enums\Role;
 use App\Enums\ShipmentStatus;
 use App\Livewire\Shop\DeliverySettingsForm;
 use App\Livewire\Shop\OrderDetail;
 use App\Models\Order;
+use App\Models\Region\District;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\DeliverySettings;
@@ -36,23 +38,68 @@ function deliverySettingsAdmin(): User
 }
 
 it('persists origin address and parcel defaults', function () {
-    Livewire::actingAs(deliverySettingsAdmin())
-        ->test(DeliverySettingsForm::class)
-        ->set('originName', 'Seconds Store')
-        ->set('originPhone', '0811111111')
-        ->set('originAddress', 'Jl. Origin 1')
-        ->set('originCity', 'Jakarta')
-        ->set('originPostal', '12345')
-        ->set('originSubdistrictId', 88)
-        ->set('defaultWeight', 1500)
-        ->set('flatRate', 20000)
-        ->call('save');
+    $region = seedTestRegion();
+    District::where('code', $region['districtCode'])->update(['kiriminaja_subdistrict_id' => 88]);
+
+    $component = Livewire::actingAs(deliverySettingsAdmin())->test(DeliverySettingsForm::class);
+    $component->set('originName', 'Seconds Store');
+    $component->set('originPhone', '0811111111');
+    $component->set('originAddress', 'Jl. Origin 1');
+    $component->set('originPostal', '12345');
+    foreach ($region as $key => $value) {
+        $component->set($key, $value);
+    }
+    $component->set('defaultWeight', 1500);
+    $component->set('flatRate', 20000);
+    $component->call('save');
 
     $origin = DeliverySettings::origin();
     expect($origin->name)->toBe('Seconds Store');
     expect($origin->subdistrictId)->toBe(88);
+    expect($origin->city)->toBe('Test City');
+    expect(DeliverySettings::originDistrictCode())->toBe($region['districtCode']);
     expect(DeliverySettings::defaultWeightGrams())->toBe(1500);
     expect(DeliverySettings::flatRate())->toBe(20000);
+});
+
+it('persists manual delivery pricing mode and free-shipping minimum', function () {
+    $region = seedTestRegion();
+
+    $component = Livewire::actingAs(deliverySettingsAdmin())->test(DeliverySettingsForm::class);
+    $component->set('originName', 'Seconds Store');
+    $component->set('originPhone', '0811111111');
+    $component->set('originAddress', 'Jl. Origin 1');
+    $component->set('originPostal', '12345');
+    foreach ($region as $key => $value) {
+        $component->set($key, $value);
+    }
+    $component->set('defaultWeight', 1000);
+    $component->set('flatRate', 15000);
+    $component->set('manualMode', 'free_shipping');
+    $component->set('freeShippingMinimum', 200000);
+    $component->call('save');
+
+    expect(DeliverySettings::manualMode())->toBe(ManualDeliveryMode::FreeShipping);
+    expect(DeliverySettings::freeShippingMinimum())->toBe(200000);
+});
+
+it('rejects saving free-shipping mode without a minimum', function () {
+    $region = seedTestRegion();
+
+    $component = Livewire::actingAs(deliverySettingsAdmin())->test(DeliverySettingsForm::class);
+    $component->set('originName', 'Seconds Store');
+    $component->set('originPhone', '0811111111');
+    $component->set('originAddress', 'Jl. Origin 1');
+    $component->set('originPostal', '12345');
+    foreach ($region as $key => $value) {
+        $component->set($key, $value);
+    }
+    $component->set('defaultWeight', 1000);
+    $component->set('flatRate', 15000);
+    $component->set('manualMode', 'free_shipping');
+    $component->set('freeShippingMinimum', '');
+    $component->call('save');
+    $component->assertHasErrors(['freeShippingMinimum']);
 });
 
 it('activates kiriminaja after verifying the key, masks it on redisplay, and can switch back', function () {

@@ -8,6 +8,7 @@ use App\Enums\PaymentProvider;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Support\ApiLogger;
 use App\Support\PaymentSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -43,22 +44,24 @@ class XenditGateway implements PaymentGateway
     {
         $keys = PaymentSettings::xenditKeys();
         $externalId = $order->number.'-'.Str::random(6);
+        $url = PaymentSettings::xenditBaseUrl().'/v2/invoices';
+        $body = [
+            'external_id' => $externalId,
+            'amount' => (int) $order->total,
+            'currency' => $order->currency,
+            'description' => 'Order '.$order->number,
+            'invoice_duration' => PaymentSettings::windowMinutes() * 60,
+            'customer' => [
+                'given_names' => $order->customer_name,
+                'email' => $order->email,
+            ],
+            'success_redirect_url' => route('order.confirmation', $order->number),
+            'failure_redirect_url' => route('order.confirmation', $order->number),
+        ];
 
-        $response = Http::withBasicAuth($keys['secret_key'], '')
+        $response = ApiLogger::http('xendit', 'POST', $url, $body, fn () => Http::withBasicAuth($keys['secret_key'], '')
             ->acceptJson()
-            ->post(PaymentSettings::xenditBaseUrl().'/v2/invoices', [
-                'external_id' => $externalId,
-                'amount' => (int) $order->total,
-                'currency' => $order->currency,
-                'description' => 'Order '.$order->number,
-                'invoice_duration' => PaymentSettings::windowMinutes() * 60,
-                'customer' => [
-                    'given_names' => $order->customer_name,
-                    'email' => $order->email,
-                ],
-                'success_redirect_url' => route('order.confirmation', $order->number),
-                'failure_redirect_url' => route('order.confirmation', $order->number),
-            ]);
+            ->post($url, $body), $order);
 
         if ($response->failed()) {
             throw new \RuntimeException('Could not create the Xendit payment. Please try again.');
@@ -102,10 +105,11 @@ class XenditGateway implements PaymentGateway
     public function reconcile(Payment $payment): PaymentEvent
     {
         $keys = PaymentSettings::xenditKeys();
+        $url = PaymentSettings::xenditBaseUrl().'/v2/invoices/'.$payment->external_id;
 
-        $response = Http::withBasicAuth($keys['secret_key'], '')
+        $response = ApiLogger::http('xendit', 'GET', $url, null, fn () => Http::withBasicAuth($keys['secret_key'], '')
             ->acceptJson()
-            ->get(PaymentSettings::xenditBaseUrl().'/v2/invoices/'.$payment->external_id);
+            ->get($url), $payment);
 
         if ($response->failed()) {
             throw new \RuntimeException('Could not reconcile Xendit payment '.$payment->external_id);

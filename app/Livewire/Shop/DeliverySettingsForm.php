@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Shop;
 
-use App\Delivery\Address;
 use App\Delivery\KiriminAjaClient;
+use App\Enums\ManualDeliveryMode;
 use App\Enums\Permission;
 use App\Enums\ShippingProvider;
+use App\Livewire\Concerns\WithRegionPicker;
+use App\Models\Region\District;
 use App\Models\Setting;
 use App\Support\DeliverySettings;
 use Livewire\Attributes\Layout;
@@ -16,6 +18,8 @@ use Livewire\Component;
 #[Title('Delivery Settings')]
 class DeliverySettingsForm extends Component
 {
+    use WithRegionPicker;
+
     // Provider-agnostic: origin address + parcel defaults + flat-rate fallback.
     public string $originName = '';
 
@@ -23,15 +27,16 @@ class DeliverySettingsForm extends Component
 
     public string $originAddress = '';
 
-    public string $originCity = '';
-
     public string $originPostal = '';
-
-    public $originSubdistrictId = '';
 
     public $defaultWeight = DeliverySettings::DEFAULT_WEIGHT_GRAMS;
 
     public $flatRate = DeliverySettings::DEFAULT_FLAT_RATE;
+
+    // Manual/offline pricing mode: single flat rate, or free above a cart minimum.
+    public string $manualMode = 'flat';
+
+    public $freeShippingMinimum = 0;
 
     // KiriminAja activation - blank means "keep the existing stored value".
     public string $kiriminajaApiKey = '';
@@ -53,12 +58,19 @@ class DeliverySettingsForm extends Component
         $this->originName = $origin->name;
         $this->originPhone = $origin->phone;
         $this->originAddress = $origin->address;
-        $this->originCity = (string) $origin->city;
         $this->originPostal = (string) $origin->postalCode;
-        $this->originSubdistrictId = $origin->subdistrictId ?? '';
+
+        if ($code = DeliverySettings::originDistrictCode()) {
+            $district = District::with('regency.province')->find($code);
+            $this->districtCode = $district?->code;
+            $this->regencyCode = $district?->regency?->code;
+            $this->provinceCode = $district?->regency?->province?->code;
+        }
 
         $this->defaultWeight = DeliverySettings::defaultWeightGrams();
         $this->flatRate = DeliverySettings::flatRate();
+        $this->manualMode = DeliverySettings::manualMode()->value;
+        $this->freeShippingMinimum = DeliverySettings::freeShippingMinimum();
         $this->enabledCouriers = implode(', ', DeliverySettings::enabledCouriers());
         $this->activeProvider = DeliverySettings::provider()->value;
     }
@@ -76,23 +88,27 @@ class DeliverySettingsForm extends Component
             'originName' => 'required|string|max:255',
             'originPhone' => 'required|string|max:20',
             'originAddress' => 'required|string|max:255',
-            'originCity' => 'nullable|string|max:120',
+            'provinceCode' => 'required|exists:id_provinces,code',
+            'regencyCode' => 'required|exists:id_regencies,code',
+            'districtCode' => 'required|exists:id_districts,code',
             'originPostal' => 'nullable|string|max:20',
-            'originSubdistrictId' => 'nullable|integer',
             'defaultWeight' => 'required|integer|min:1',
             'flatRate' => 'required|integer|min:0',
+            'manualMode' => 'required|in:flat,free_shipping',
+            'freeShippingMinimum' => 'required_if:manualMode,free_shipping|nullable|integer|min:0',
         ]);
 
-        DeliverySettings::setOrigin(new Address(
+        DeliverySettings::setOrigin(
             name: $data['originName'],
             phone: $data['originPhone'],
             address: $data['originAddress'],
-            subdistrictId: $data['originSubdistrictId'] !== '' && $data['originSubdistrictId'] !== null ? (int) $data['originSubdistrictId'] : null,
-            city: $data['originCity'],
-            postalCode: $data['originPostal'],
-        ));
+            postalCode: $data['originPostal'] ?? '',
+            districtCode: $data['districtCode'],
+        );
         Setting::set('delivery_default_weight', (string) $data['defaultWeight']);
         Setting::set('delivery_flat_rate', (string) $data['flatRate']);
+        DeliverySettings::setManualMode(ManualDeliveryMode::from($data['manualMode']));
+        DeliverySettings::setFreeShippingMinimum((int) ($data['freeShippingMinimum'] ?? 0));
 
         session()->flash('success', 'Delivery settings saved.');
     }

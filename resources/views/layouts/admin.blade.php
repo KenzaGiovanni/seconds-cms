@@ -120,6 +120,10 @@
                                @class([$navItem, $navActive => request()->routeIs('admin.shop.delivery.*'), $navIdle => ! request()->routeIs('admin.shop.delivery.*')])>
                                 Delivery
                             </a>
+                            <a href="{{ route('admin.shop.api-logs.index') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.api-logs.*'), $navIdle => ! request()->routeIs('admin.shop.api-logs.*')])>
+                                API Logs
+                            </a>
                         @endcan
                         @can(\App\Enums\Permission::PromotionsManage->value)
                             <a href="{{ route('admin.shop.promotions.index') }}"

@@ -30,9 +30,36 @@
             </div>
             <div class="checkout-field-row">
                 <div class="checkout-field">
-                    <label>City</label>
-                    <input type="text" wire:model="city">
-                    @error('city') <p class="field-error">{{ $message }}</p> @enderror
+                    <label>Province</label>
+                    <select wire:model.live="provinceCode">
+                        <option value="">Select province</option>
+                        @foreach ($this->provinceOptions() as $province)
+                            <option value="{{ $province->code }}">{{ $province->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('provinceCode') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <div class="checkout-field">
+                    <label>City / Regency</label>
+                    <select wire:model.live="regencyCode" @disabled(! $provinceCode)>
+                        <option value="">Select city / regency</option>
+                        @foreach ($this->regencyOptions() as $regency)
+                            <option value="{{ $regency->code }}">{{ $regency->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('regencyCode') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+            </div>
+            <div class="checkout-field-row">
+                <div class="checkout-field">
+                    <label>District</label>
+                    <select wire:model.live="districtCode" @disabled(! $regencyCode)>
+                        <option value="">Select district</option>
+                        @foreach ($this->districtOptions() as $district)
+                            <option value="{{ $district->code }}">{{ $district->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('districtCode') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
                 <div class="checkout-field">
                     <label>Postal code</label>

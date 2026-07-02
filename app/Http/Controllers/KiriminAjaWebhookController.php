@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Delivery\KiriminAjaProvider;
 use App\Delivery\ShipmentService;
+use App\Support\ApiLogger;
 use App\Support\Feature;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,10 +24,14 @@ class KiriminAjaWebhookController extends Controller
         try {
             $event = $provider->handleWebhook($request);
         } catch (\RuntimeException $e) {
+            ApiLogger::inbound('kiriminaja', 'webhooks/kiriminaja', $request->all(), false, $e->getMessage());
+
             return response($e->getMessage(), 401);
         }
 
         $shipments->applyTrackingEvent($event);
+
+        ApiLogger::inbound('kiriminaja', 'webhooks/kiriminaja', $request->all(), true);
 
         return response('OK', 200);
     }

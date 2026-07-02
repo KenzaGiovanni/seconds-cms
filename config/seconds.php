@@ -34,4 +34,21 @@ return [
 
     'low_stock_threshold' => env('SECONDS_LOW_STOCK_THRESHOLD', 5),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Indonesia regions dataset
+    |--------------------------------------------------------------------------
+    |
+    | Source for `regions:import-indonesia` (province -> regency -> district ->
+    | village address picker). Official Kemendagri/BPS hierarchical codes,
+    | via ibnux/data-indonesia's single-file mysqldump. One-time pull, not
+    | fetched at request time - see seconds-spec.md for the full write-up.
+    |
+    */
+
+    'indonesia_regions_source_url' => env(
+        'INDONESIA_REGIONS_SOURCE_URL',
+        'https://raw.githubusercontent.com/ibnux/data-indonesia/master/wilayah_indonesia.sql',
+    ),
+
 ];

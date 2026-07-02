@@ -35,14 +35,13 @@ beforeEach(function () {
 
 function checkoutFormData(): array
 {
-    return [
+    return array_merge([
         'name' => 'Budi Santoso',
         'email' => 'budi@example.com',
         'phone' => '08123456789',
         'addressLine' => 'Jl. Sudirman No. 1',
-        'city' => 'Jakarta',
         'postalCode' => '10220',
-    ];
+    ], seedTestRegion());
 }
 
 it('returns 404 for /checkout when ecommerce is off', function () {
@@ -180,7 +179,7 @@ it('rejects checkout when the cart is empty', function () {
 it('validates required checkout fields', function () {
     Livewire::test(Checkout::class)
         ->call('placeOrder')
-        ->assertHasErrors(['name', 'email', 'addressLine', 'city', 'postalCode']);
+        ->assertHasErrors(['name', 'email', 'addressLine', 'provinceCode', 'regencyCode', 'districtCode', 'postalCode']);
 });
 
 // --- Order confirmation ownership ---

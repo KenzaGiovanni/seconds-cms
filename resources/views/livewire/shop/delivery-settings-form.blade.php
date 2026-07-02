@@ -44,19 +44,43 @@
                 @error('originAddress') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                    <label class="{{ $label }}" for="originCity">City</label>
-                    <input id="originCity" wire:model="originCity" type="text" class="{{ $input }}" />
+                    <label class="{{ $label }}" for="provinceCode">Province</label>
+                    <select id="provinceCode" wire:model.live="provinceCode" class="{{ $input }}">
+                        <option value="">Select province</option>
+                        @foreach ($this->provinceOptions() as $province)
+                            <option value="{{ $province->code }}">{{ $province->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('provinceCode') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="{{ $label }}" for="regencyCode">City / Regency</label>
+                    <select id="regencyCode" wire:model.live="regencyCode" class="{{ $input }}" @disabled(! $provinceCode)>
+                        <option value="">Select city / regency</option>
+                        @foreach ($this->regencyOptions() as $regency)
+                            <option value="{{ $regency->code }}">{{ $regency->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('regencyCode') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="{{ $label }}" for="districtCode">District</label>
+                    <select id="districtCode" wire:model="districtCode" class="{{ $input }}" @disabled(! $regencyCode)>
+                        <option value="">Select district</option>
+                        @foreach ($this->districtOptions() as $district)
+                            <option value="{{ $district->code }}">{{ $district->name }}{{ $district->kiriminaja_subdistrict_id ? '' : ' (rates: flat-rate until matched)' }}</option>
+                        @endforeach
+                    </select>
+                    @error('districtCode') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="{{ $label }}" for="originPostal">Postal code</label>
                     <input id="originPostal" wire:model="originPostal" type="text" class="{{ $input }}" />
-                </div>
-                <div>
-                    <label class="{{ $label }}" for="originSubdistrictId">KiriminAja sub-district ID</label>
-                    <input id="originSubdistrictId" wire:model="originSubdistrictId" type="number" class="{{ $input }}" placeholder="Optional - required for live KiriminAja rates" />
-                    @error('originSubdistrictId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -67,11 +91,37 @@
                     @error('defaultWeight') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="{{ $label }}" for="flatRate">Flat-rate fallback (shown if live rates are unavailable)</label>
+                    <label class="{{ $label }}" for="flatRate">
+                        Flat rate{{ $provider->value === 'manual' ? ' (manual delivery)' : ' (fallback when live rates are unavailable)' }}
+                    </label>
                     <input id="flatRate" wire:model="flatRate" type="number" min="0" class="{{ $input }}" />
                     @error('flatRate') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
             </div>
+
+            <div>
+                <label class="{{ $label }}">Manual delivery pricing</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm text-ink">
+                        <input type="radio" wire:model.live="manualMode" value="flat">
+                        Single flat rate
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-ink">
+                        <input type="radio" wire:model.live="manualMode" value="free_shipping">
+                        Free shipping (with minimum)
+                    </label>
+                </div>
+                @error('manualMode') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            @if ($manualMode === 'free_shipping')
+                <div>
+                    <label class="{{ $label }}" for="freeShippingMinimum">Free shipping minimum (cart subtotal)</label>
+                    <input id="freeShippingMinimum" wire:model="freeShippingMinimum" type="number" min="0" class="{{ $input }}" placeholder="e.g. 200000" />
+                    <p class="mt-1 text-xs text-muted">Orders at or above this subtotal ship free; below it, the flat rate above applies.</p>
+                    @error('freeShippingMinimum') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+            @endif
 
             <button type="submit" class="rounded-[var(--radius-btn)] bg-accent px-4 py-2 font-display text-sm font-medium text-white transition hover:opacity-90">
                 Save

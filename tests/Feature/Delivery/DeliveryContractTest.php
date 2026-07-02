@@ -90,6 +90,35 @@ it('manual provider offers a flat-rate quote and books an offline shipment', fun
     expect($order->fresh()->status)->toBe(OrderStatus::Paid);
 });
 
+it('manual provider is free above the configured cart minimum in free-shipping mode', function () {
+    Setting::set('delivery_flat_rate', 15000);
+    Setting::set('delivery_manual_mode', 'free_shipping');
+    Setting::set('delivery_free_shipping_minimum', 200000);
+    Setting::flushCache();
+
+    $order = paidOrder(qty: 1); // subtotal 60000 - below the 200000 minimum
+    $belowMinimum = (new ShipmentService)->rates($order);
+    expect($belowMinimum[0]->cost)->toBe(15000); // falls back to the flat rate
+
+    $order->subtotal = 250000; // above the minimum
+    $atOrAboveMinimum = (new ShipmentService)->rates($order);
+    expect($atOrAboveMinimum[0]->cost)->toBe(0);
+    expect($atOrAboveMinimum[0]->serviceName)->toBe('Free shipping');
+});
+
+it('manual provider always charges the flat rate in single-rate mode regardless of cart size', function () {
+    Setting::set('delivery_flat_rate', 15000);
+    Setting::set('delivery_manual_mode', 'flat');
+    Setting::set('delivery_free_shipping_minimum', 1); // would trivially qualify if mode were free_shipping
+    Setting::flushCache();
+
+    $order = paidOrder(qty: 1);
+    $order->subtotal = 5000000;
+    $rates = (new ShipmentService)->rates($order);
+
+    expect($rates[0]->cost)->toBe(15000);
+});
+
 it('does not double-book an order that already has an active shipment', function () {
     $order = paidOrder();
     $svc = new ShipmentService;

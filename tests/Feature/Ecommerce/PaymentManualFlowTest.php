@@ -48,10 +48,10 @@ function manualFlowOrder(): Order
     app(CartManager::class)->addItem($product, 2);
 
     $component = Livewire::test(Checkout::class);
-    foreach ([
+    foreach (array_merge([
         'name' => 'Budi Santoso', 'email' => 'budi@example.com', 'phone' => '08123456789',
-        'addressLine' => 'Jl. Sudirman No. 1', 'city' => 'Jakarta', 'postalCode' => '10220',
-    ] as $key => $value) {
+        'addressLine' => 'Jl. Sudirman No. 1', 'postalCode' => '10220',
+    ], seedTestRegion()) as $key => $value) {
         $component->set($key, $value);
     }
     $component->call('placeOrder');

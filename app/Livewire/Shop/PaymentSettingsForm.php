@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentProvider;
 use App\Enums\Permission;
 use App\Models\Setting;
+use App\Support\ApiLogger;
 use App\Support\PaymentSettings;
 use Illuminate\Support\Facades\Http;
 use Livewire\Attributes\Layout;
@@ -103,7 +104,8 @@ class PaymentSettingsForm extends Component
             return;
         }
 
-        $response = Http::withBasicAuth($secretKey, '')->get(PaymentSettings::xenditBaseUrl().'/balance');
+        $balanceUrl = PaymentSettings::xenditBaseUrl().'/balance';
+        $response = ApiLogger::http('xendit', 'GET', $balanceUrl, null, fn () => Http::withBasicAuth($secretKey, '')->get($balanceUrl));
 
         if ($response->failed()) {
             session()->flash('error', 'Could not verify those Xendit keys - check them and try again.');

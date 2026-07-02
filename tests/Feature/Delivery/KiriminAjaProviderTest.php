@@ -8,6 +8,7 @@ use App\Delivery\RateChoice;
 use App\Enums\ShipmentStatus;
 use App\Enums\ShippingProvider;
 use App\Models\Order;
+use App\Models\Region\District;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -74,7 +75,11 @@ beforeEach(function () {
     Setting::set('delivery_origin_name', 'Seconds Store');
     Setting::set('delivery_origin_phone', '0811111111');
     Setting::set('delivery_origin_address', 'Jl. Origin 1');
-    Setting::set('delivery_origin_subdistrict_id', '5');
+
+    $region = seedTestRegion();
+    District::where('code', $region['districtCode'])->update(['kiriminaja_subdistrict_id' => 5]);
+    Setting::set('delivery_origin_district_code', $region['districtCode']);
+
     Setting::set('kiriminaja_api_key', 'test-key');
     Setting::set('kiriminaja_mode', 'staging');
     Setting::flushCache();

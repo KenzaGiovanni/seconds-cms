@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Payments\PaymentService;
 use App\Payments\XenditGateway;
+use App\Support\ApiLogger;
 use App\Support\Feature;
 use App\Support\PaymentSettings;
 use Illuminate\Http\Request;
@@ -24,11 +25,15 @@ class XenditWebhookController extends Controller
         $expected = PaymentSettings::xenditKeys()['webhook_token'];
 
         if ($expected === '' || ! hash_equals($expected, (string) $token)) {
+            ApiLogger::inbound('xendit', 'webhooks/xendit', $request->all(), false, 'invalid or missing callback token');
+
             return response('Invalid callback token', 401);
         }
 
         $event = $gateway->handleWebhook($request);
         $payments->applyEvent($event);
+
+        ApiLogger::inbound('xendit', 'webhooks/xendit', $request->all(), true);
 
         return response('OK', 200);
     }

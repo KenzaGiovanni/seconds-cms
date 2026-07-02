@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Delivery\Address;
 use App\Delivery\Parcel;
+use App\Enums\ManualDeliveryMode;
 use App\Enums\ShippingProvider;
+use App\Models\Region\District;
 use App\Models\Setting;
 
 /**
@@ -36,6 +38,29 @@ class DeliverySettings
         return max(0, (int) Setting::get('delivery_flat_rate', self::DEFAULT_FLAT_RATE));
     }
 
+    /** How the manual/offline provider prices its one rate option. */
+    public static function manualMode(): ManualDeliveryMode
+    {
+        return ManualDeliveryMode::tryFrom((string) Setting::get('delivery_manual_mode', ManualDeliveryMode::default()->value))
+            ?? ManualDeliveryMode::default();
+    }
+
+    public static function setManualMode(ManualDeliveryMode $mode): void
+    {
+        Setting::set('delivery_manual_mode', $mode->value);
+    }
+
+    /** Cart subtotal (integer minor units) at/above which manual delivery is free, when FreeShipping mode is active. */
+    public static function freeShippingMinimum(): int
+    {
+        return max(0, (int) Setting::get('delivery_free_shipping_minimum', 0));
+    }
+
+    public static function setFreeShippingMinimum(int $minorUnits): void
+    {
+        Setting::set('delivery_free_shipping_minimum', (string) max(0, $minorUnits));
+    }
+
     /** Default parcel weight in grams for rate calls when no per-order figure exists. */
     public static function defaultWeightGrams(): int
     {
@@ -50,17 +75,32 @@ class DeliverySettings
         );
     }
 
-    /** The store's ship-from address for rate + booking calls. */
+    /**
+     * The store's ship-from address for rate + booking calls. `subdistrictId`
+     * and `city` are derived from the selected district (region picker), not
+     * stored directly - so they stay correct even before/after a KiriminAja
+     * reconciliation backfills `kiriminaja_subdistrict_id` on that district.
+     */
     public static function origin(): Address
     {
+        $district = ($code = self::originDistrictCode()) ? District::with('regency')->find($code) : null;
+
         return new Address(
             name: (string) Setting::get('delivery_origin_name', (string) Setting::get('site_name', '')),
             phone: (string) Setting::get('delivery_origin_phone', ''),
             address: (string) Setting::get('delivery_origin_address', ''),
-            subdistrictId: ($sid = Setting::get('delivery_origin_subdistrict_id')) ? (int) $sid : null,
-            city: (string) Setting::get('delivery_origin_city', ''),
+            subdistrictId: $district?->kiriminaja_subdistrict_id,
+            city: $district?->regency?->name,
             postalCode: (string) Setting::get('delivery_origin_postal', ''),
         );
+    }
+
+    /** The locally-selected origin district code (id_districts.code), or null if unset. */
+    public static function originDistrictCode(): ?string
+    {
+        $code = (string) Setting::get('delivery_origin_district_code', '');
+
+        return $code !== '' ? $code : null;
     }
 
     /**
@@ -107,13 +147,12 @@ class DeliverySettings
         Setting::set('kiriminaja_enabled_couriers', implode(',', $couriers));
     }
 
-    public static function setOrigin(Address $origin): void
+    public static function setOrigin(string $name, string $phone, string $address, string $postalCode, ?string $districtCode): void
     {
-        Setting::set('delivery_origin_name', $origin->name);
-        Setting::set('delivery_origin_phone', $origin->phone);
-        Setting::set('delivery_origin_address', $origin->address);
-        Setting::set('delivery_origin_subdistrict_id', (string) ($origin->subdistrictId ?? ''));
-        Setting::set('delivery_origin_city', (string) $origin->city);
-        Setting::set('delivery_origin_postal', (string) $origin->postalCode);
+        Setting::set('delivery_origin_name', $name);
+        Setting::set('delivery_origin_phone', $phone);
+        Setting::set('delivery_origin_address', $address);
+        Setting::set('delivery_origin_postal', $postalCode);
+        Setting::set('delivery_origin_district_code', $districtCode ?? '');
     }
 }

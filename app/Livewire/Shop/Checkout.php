@@ -6,6 +6,7 @@ use App\Delivery\Address as ShippingAddress;
 use App\Delivery\ShipmentService;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentProvider;
+use App\Livewire\Concerns\WithRegionPicker;
 use App\Support\CartManager;
 use App\Support\CheckoutService;
 use App\Support\PaymentSettings;
@@ -18,6 +19,8 @@ use Livewire\Component;
  */
 class Checkout extends Component
 {
+    use WithRegionPicker;
+
     public string $name = '';
 
     public string $email = '';
@@ -25,8 +28,6 @@ class Checkout extends Component
     public string $phone = '';
 
     public string $addressLine = '';
-
-    public string $city = '';
 
     public string $postalCode = '';
 
@@ -78,7 +79,9 @@ class Checkout extends Component
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:50',
             'addressLine' => 'required|string|max:255',
-            'city' => 'required|string|max:120',
+            'provinceCode' => 'required|exists:id_provinces,code',
+            'regencyCode' => 'required|exists:id_regencies,code',
+            'districtCode' => 'required|exists:id_districts,code',
             'postalCode' => 'required|string|max:20',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -92,6 +95,9 @@ class Checkout extends Component
         $rates = $shipments->previewRates($this->destinationAddress(), (int) $cart->totals()['subtotal']);
         $chosen = collect($rates)->first(fn ($rate) => $rate->id() === $this->deliveryChoice) ?? ($rates[0] ?? null);
 
+        $district = $this->selectedDistrict();
+        $regionNames = $this->selectedRegionNames();
+
         try {
             $order = $checkout->placeOrder(
                 [
@@ -101,8 +107,15 @@ class Checkout extends Component
                 ],
                 [
                     'address_line' => $data['addressLine'],
-                    'city' => $data['city'],
+                    'city' => $regionNames['regency'],
                     'postal_code' => $data['postalCode'],
+                    'province_code' => $data['provinceCode'],
+                    'province_name' => $regionNames['province'],
+                    'regency_code' => $data['regencyCode'],
+                    'regency_name' => $regionNames['regency'],
+                    'district_code' => $data['districtCode'],
+                    'district_name' => $regionNames['district'],
+                    'subdistrict_id' => $district?->kiriminaja_subdistrict_id,
                 ],
                 $data['notes'] ?: null,
                 $chosen,
@@ -133,11 +146,15 @@ class Checkout extends Component
     /** Build the destination Address from whatever the customer has entered so far. */
     private function destinationAddress(): ShippingAddress
     {
+        $district = $this->selectedDistrict();
+        $regionNames = $this->selectedRegionNames();
+
         return new ShippingAddress(
             name: $this->name,
             phone: $this->phone,
             address: $this->addressLine,
-            city: $this->city ?: null,
+            subdistrictId: $district?->kiriminaja_subdistrict_id,
+            city: $regionNames['regency'],
             postalCode: $this->postalCode ?: null,
         );
     }

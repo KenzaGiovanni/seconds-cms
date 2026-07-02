@@ -3,6 +3,7 @@
 namespace App\Delivery;
 
 use App\Contracts\DeliveryProvider;
+use App\Enums\ManualDeliveryMode;
 use App\Enums\ShipmentStatus;
 use App\Enums\ShippingProvider;
 use App\Models\Order;
@@ -11,11 +12,15 @@ use App\Support\DeliverySettings;
 use Illuminate\Http\Request;
 
 /**
- * The default delivery mode: offline / manual fulfilment. It offers a single
- * flat-rate option (from Shop settings), and booking simply records the courier
- * + tracking number the admin types in by hand - there is no courier API and no
- * webhook. Status is advanced manually by staff (ShipmentService::advanceManual).
- * First-class, not an afterthought - mirrors ManualGateway on the payment side.
+ * The default delivery mode: offline / manual fulfilment. Always offers a
+ * single rate option (from Shop settings), priced one of two ways
+ * (`DeliverySettings::manualMode()`): a flat rate always, or free once the
+ * cart subtotal (`Parcel::$itemValue`) reaches a configured minimum -
+ * falling back to the same flat rate below it. Booking simply records the
+ * courier + tracking number the admin types in by hand - there is no
+ * courier API and no webhook. Status is advanced manually by staff
+ * (ShipmentService::advanceManual). First-class, not an afterthought -
+ * mirrors ManualGateway on the payment side.
  */
 class ManualDeliveryProvider implements DeliveryProvider
 {
@@ -32,12 +37,15 @@ class ManualDeliveryProvider implements DeliveryProvider
     /** @return list<RateQuote> */
     public function rates(Address $origin, Address $destination, Parcel $parcel): array
     {
+        $isFree = DeliverySettings::manualMode() === ManualDeliveryMode::FreeShipping
+            && $parcel->itemValue >= DeliverySettings::freeShippingMinimum();
+
         return [
             new RateQuote(
                 courier: 'manual',
-                serviceCode: 'flat',
-                serviceName: 'Standard shipping',
-                cost: DeliverySettings::flatRate(),
+                serviceCode: $isFree ? 'free' : 'flat',
+                serviceName: $isFree ? 'Free shipping' : 'Standard shipping',
+                cost: $isFree ? 0 : DeliverySettings::flatRate(),
             ),
         ];
     }

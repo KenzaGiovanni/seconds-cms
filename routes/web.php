@@ -20,6 +20,7 @@ use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
 use App\Livewire\Settings\WebsiteSettings;
+use App\Livewire\Shop\ApiLogList;
 use App\Livewire\Shop\DeliverySettingsForm;
 use App\Livewire\Shop\OrderDetail;
 use App\Livewire\Shop\OrderList;
@@ -213,6 +214,9 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
         Route::prefix('delivery')->name('delivery.')->group(function () {
             Route::get('/settings', DeliverySettingsForm::class)->name('settings');
         });
+
+        // API logs — every outbound Xendit/KiriminAja call + inbound webhook, for debugging.
+        Route::get('/api-logs', ApiLogList::class)->name('api-logs.index');
     });
 });
 
