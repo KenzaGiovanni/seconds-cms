@@ -28,7 +28,7 @@ Built by Kenza under &Now. Target users: &Now consulting clients (Indonesian SME
 | Tests | Pest 4 |
 | Formatting | Laravel Pint |
 | Payments | Xendit (`xendit/xendit-php`) - Phase 3 |
-| Delivery | KiriminAja (`kiriminaja/php`) - Phase 4 |
+| Delivery | KiriminAja (`kiriminaja/kiriminaja-php`) - Phase 4 |
 
 ## Requirements
 
@@ -264,7 +264,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish), and **Phase 3 (Payments: manual bank transfer + Xendit, 3.0-3.4) are all complete**. Test suite: **399/399 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish), and **Phase 3 (Payments: manual bank transfer + Xendit, 3.0-3.4) are all complete**. **Phase 4 (Delivery/KiriminAja) is underway - 4.0 (the provider contract + shipment state machine) has shipped.** Test suite: **412/412 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -290,6 +290,7 @@ What's shipped:
 - **Xendit activation + invoice creation** (3.2): `App\Payments\XenditGateway` calls Xendit's REST API directly via Laravel's `Http` facade (not the `xendit/xendit-php` SDK - no outbound network access to install it in the build environment; see `seconds-spec.md` §14 for the swap-back plan) to create a hosted **Xendit Invoice** covering VA/QRIS/e-wallet/card in one integration surface. Admins activate Xendit from `/admin/shop/payments/settings` (secret/public keys + webhook token, masked once saved, live-verified against Xendit's balance endpoint before activating; enabled-methods checkboxes) - this flips `payment_provider` to `xendit`, with manual staying one click away as a fallback. Checkout redirects the customer straight to the hosted invoice page when Xendit is active; the pending `Payment` row snapshots the invoice id, amount, currency, and full invoice response.
 - **Xendit webhook handling + reconciliation** (3.3): `POST /webhooks/xendit` (the app's first CSRF-exempt route) verifies the `x-callback-token` header before any DB write, then applies the event through the same idempotent `PaymentService::applyEvent()` every other payment path uses - a `PAID` webhook marks the order paid, an `EXPIRED` one cancels + restocks it, unknown/bad-token requests are rejected safely. A `payments:reconcile` command (scheduled every 5 minutes) re-queries Xendit for any pending payment older than 5 minutes as a safety net for a missed webhook; the admin order detail screen has a matching "Re-check" button next to any pending Xendit payment.
 - **Payments admin + methods UI** (3.4, closes Phase 3): the checkout payment-method selector now reflects the real active provider - bank transfer only in manual mode, or exactly the methods enabled in Xendit activation once it's live (toggling a method off there hides it at checkout immediately). `OrderDetail` gained a genuine **per-order payment timeline**: every payment attempt with its amount/created/paid timestamps, proof-upload details (reference + a link to view the file) and verifier for manual transfers, and a **Refund** action for any `paid` payment (`PaymentService::markRefunded()` - marks the payment refunded and moves the order to `refunded` if it can; the real gateway refund call is deferred/log-only in v1, matching the Forms-module stub convention).
+- **Delivery provider contract + shipment state machine** (4.0, opens Phase 4): a `DeliveryProvider` interface with a first-class `ManualDeliveryProvider` (offline fulfilment - flat-rate quote, admin-entered courier + tracking, no webhook), a `shipments` table, and `ShipmentService` - the single row-locked, monotonic path every shipment advance flows through (tracking webhook, reconcile, admin manual advance), so fulfilment is idempotent and out-of-order-safe. `ShipmentStatus` (pending -> booked -> picked_up -> in_transit -> delivered, + cancelled/returned) reconciles with the order state machine (picked_up/in_transit -> `fulfilled`, delivered -> `completed`) without forking it. The real KiriminAja SDK (`kiriminaja/kiriminaja-php`) is installed and sits behind the interface; live rates, booking, and webhooks are wired in 4.1-4.4. Not reachable from checkout/admin yet.
 
 ### Payments
 
@@ -301,7 +302,7 @@ Roadmap (see the spec for detail):
 2. **Phase 1.5** - Block system v2 + Forms - **DONE**
 3. **Phase 2** - Ecommerce core: catalog, cart, checkout, orders - **DONE** (2.0-2.5 all shipped).
 4. **Phase 3** - Payments (manual bank transfer + Xendit) - **DONE** (3.0-3.4 all shipped).
-5. **Phase 4** - Delivery (KiriminAja).
+5. **Phase 4** - Delivery (KiriminAja) - **IN PROGRESS** (4.0 provider contract + shipment state machine shipped; 4.1 live rates, 4.2 booking/pickup, 4.3 tracking webhooks, 4.4 admin next).
 6. **Phase 5** - Productization: gated theme code editor, more themes, hardening, docs, **storefront UI ownership refactor** (module-owned cart/checkout/portal/confirmation), and the **customer accounts + portal** build-out.
 
 ## License

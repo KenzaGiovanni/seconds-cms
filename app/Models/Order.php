@@ -60,6 +60,20 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
+    }
+
+    /** The latest active shipment (the one fulfilment tracks), if any. */
+    public function activeShipment(): ?Shipment
+    {
+        return $this->shipments()
+            ->latest('id')
+            ->get()
+            ->first(fn (Shipment $s) => $s->isActive());
+    }
+
     /**
      * Move the order to a new status, enforcing the OrderStatus state machine.
      * Stamps the matching timestamp. Throws on an illegal transition.

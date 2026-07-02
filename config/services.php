@@ -46,4 +46,15 @@ return [
         'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
     ],
 
+    // Delivery aggregator. Uses the official kiriminaja/kiriminaja-php SDK
+    // (auto-registered Laravel provider reads these keys). Env values are
+    // fallback defaults; the key admins actually activate with is entered in
+    // Shop > Delivery and persisted via DeliverySettings.
+    'kiriminaja' => [
+        'api_key' => env('KIRIMINAJA_API_KEY'),
+        'mode' => env('KIRIMINAJA_MODE', 'staging'), // staging (test) | production
+        'base_url' => env('KIRIMINAJA_BASE_URL'),    // optional override
+        'webhook_token' => env('KIRIMINAJA_WEBHOOK_TOKEN'),
+    ],
+
 ];
