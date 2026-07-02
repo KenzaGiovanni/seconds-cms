@@ -151,8 +151,9 @@ The admin product list shows stock **read-only** (edit stock on the product form
 The ecommerce toggle is **off by default** - with it off, `/shop`, `/cart`, `/checkout`, and the admin "Shop" sidebar section are all correctly hidden/404 (that's the toggle working, not a bug). Turn it on at **Website Settings > Shop** (`/admin/settings`), or seed demo content which flips it on for you:
 
 ```bash
-php artisan db:seed --class=DemoShopSeeder    # turns ecommerce ON + seeds sample products/categories
-php artisan regions:import-indonesia          # one-time: pulls the Indonesia address dataset (needed for checkout's address picker)
+php artisan db:seed --class=DemoShopSeeder                              # turns ecommerce ON + seeds sample products/categories
+php artisan regions:import-indonesia                                    # one-time: pulls the Indonesia address dataset (needed for checkout's address picker)
+php artisan regions:import-postal-codes --source=<path-to-local-file>   # one-time: real postal codes - no public URL, must be supplied locally
 ```
 
 Then visit:
@@ -265,7 +266,7 @@ Visit `/sample` for a page stacked from Hero + Feature grid + CTA + a contact fo
 
 ## Build status
 
-Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish), **Phase 3 (Payments: manual bank transfer + Xendit, 3.0-3.4)**, and **Phase 4 (Delivery: manual + KiriminAja, 4.0-4.4) are all complete**, plus three post-Phase-4 additions: a real Indonesia address picker, free-shipping-over-a-minimum for manual delivery, and full API call logging for Payments + Delivery. Test suite: **456/456 green**.
+Phase 0 (Foundation), Phase 1 (Core CMS), Phase 1.5 (Block system v2 + Forms), the default theme build-out, the site-settings restructure + theme code editor, Phase 2 (Ecommerce core: catalog, storefront, cart, checkout/orders, inventory polish), **Phase 3 (Payments: manual bank transfer + Xendit, 3.0-3.4)**, and **Phase 4 (Delivery: manual + KiriminAja, 4.0-4.4) are all complete**, plus four post-Phase-4 additions: a real Indonesia address picker (with real postal codes), free-shipping-over-a-minimum for manual delivery, and full API call logging for Payments + Delivery. Test suite: **463/463 green**.
 
 What's shipped:
 - Auth, RBAC (4 roles via spatie), admin shell, ecommerce toggle, first-run installer
@@ -297,6 +298,7 @@ What's shipped:
 - **Tracking webhooks + fulfilment** (4.3): `POST /webhooks/kiriminaja` (CSRF-exempt, token-verified) advances shipment + order fulfilment state idempotently through the same locked path as everything else; a `delivery:reconcile` command (scheduled every 5 minutes) re-checks stale in-flight shipments as a safety net for a missed webhook, with a matching "Re-check" button on the order detail screen.
 - **Delivery admin + settings** (4.4, closes Phase 4): `/admin/shop/delivery/settings` - origin address + parcel defaults + flat-rate fallback, then a Manual/KiriminAja provider grid (key activation verified against KiriminAja's balance endpoint before switching, plus an enabled-couriers filter). A **manual-shipment fallback** on the order detail screen lets an admin type a courier + tracking number by hand for any order, regardless of which provider is active site-wide.
 - **Indonesia address picker** (post-Phase-4): a real Province → City/Regency → District cascading picker, backed by the official Kemendagri/BPS region dataset pulled one-time via `php artisan regions:import-indonesia` (38 provinces, 514 regencies, 7,285 districts, 83,762 villages). Replaces free-text city fields on checkout's destination address and delivery settings' origin address. A district's `kiriminaja_subdistrict_id` (nullable, backfilled separately once real KiriminAja credentials exist) is what actually unlocks live per-courier rates for that area - until then, checkout gracefully uses the flat rate.
+- **Real postal codes** (post-Phase-4): once a district is picked, the postal code field becomes a real dropdown of matched postal codes (urban/kelurahan name shown) instead of free text, via a separate `id_postal_codes` dataset imported with `php artisan regions:import-postal-codes --source=<local file>` (no public URL - must be supplied locally). ~91% of districts nationally have a match (96% outside Papua/Papua Barat, whose gap is a known province-boundary vintage issue in the source file, not a bug - see `seconds-spec.md` §21.4); districts with no match keep the free-text fallback so the form is never blocked.
 - **Free shipping over a cart minimum** (post-Phase-4): manual/offline delivery now supports two pricing modes - a single flat rate (default), or free shipping once the cart subtotal reaches an admin-configured minimum (falling back to the flat rate below it). Set at `/admin/shop/delivery/settings`.
 - **API call logging** (post-Phase-4): every outbound call to Xendit and KiriminAja, and every inbound webhook from them, is captured to an `api_logs` table (request, response, status, timing, success/failure) via `App\Support\ApiLogger` - built for debugging. View and filter them at `/admin/shop/api-logs`.
 

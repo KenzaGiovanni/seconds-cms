@@ -80,6 +80,12 @@ class DeliverySettingsForm extends Component
         $this->activeProvider = $provider;
     }
 
+    /** A district change invalidates any postal code picked for the old one. */
+    public function updatedDistrictCode(): void
+    {
+        $this->originPostal = '';
+    }
+
     public function save(): void
     {
         abort_unless(auth()->user()->can(Permission::OrdersManage->value), 403);

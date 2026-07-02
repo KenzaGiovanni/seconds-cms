@@ -70,7 +70,7 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                     <label class="{{ $label }}" for="districtCode">District</label>
-                    <select id="districtCode" wire:model="districtCode" class="{{ $input }}" @disabled(! $regencyCode)>
+                    <select id="districtCode" wire:model.live="districtCode" class="{{ $input }}" @disabled(! $regencyCode)>
                         <option value="">Select district</option>
                         @foreach ($this->districtOptions() as $district)
                             <option value="{{ $district->code }}">{{ $district->name }}{{ $district->kiriminaja_subdistrict_id ? '' : ' (rates: flat-rate until matched)' }}</option>
@@ -80,7 +80,17 @@
                 </div>
                 <div>
                     <label class="{{ $label }}" for="originPostal">Postal code</label>
-                    <input id="originPostal" wire:model="originPostal" type="text" class="{{ $input }}" />
+                    @php($originPostalOptions = $this->postalCodeOptions())
+                    @if ($originPostalOptions->isNotEmpty())
+                        <select id="originPostal" wire:model="originPostal" class="{{ $input }}">
+                            <option value="">Select postal code</option>
+                            @foreach ($originPostalOptions as $option)
+                                <option value="{{ $option->postal_code }}">{{ $option->postal_code }} - {{ $option->urban }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input id="originPostal" wire:model="originPostal" type="text" class="{{ $input }}" placeholder="{{ $districtCode ? 'Not in our postal code data - enter manually' : '' }}" />
+                    @endif
                 </div>
             </div>
 

@@ -63,7 +63,17 @@
                 </div>
                 <div class="checkout-field">
                     <label>Postal code</label>
-                    <input type="text" wire:model="postalCode">
+                    @php($postalOptions = $this->postalCodeOptions())
+                    @if ($postalOptions->isNotEmpty())
+                        <select wire:model="postalCode">
+                            <option value="">Select postal code</option>
+                            @foreach ($postalOptions as $option)
+                                <option value="{{ $option->postal_code }}">{{ $option->postal_code }} - {{ $option->urban }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="text" wire:model="postalCode" placeholder="{{ $districtCode ? 'Not in our postal code data - enter manually' : '' }}">
+                    @endif
                     @error('postalCode') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
             </div>

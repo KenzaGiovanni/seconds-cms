@@ -119,8 +119,8 @@ it('creates a pending xendit payment with the invoice external_id and snapshotte
     $component = Livewire::test(Checkout::class);
     foreach (array_merge([
         'name' => 'Budi Santoso', 'email' => 'budi@example.com', 'phone' => '08123456789',
-        'addressLine' => 'Jl. Sudirman No. 1', 'postalCode' => '10220',
-    ], seedTestRegion()) as $key => $value) {
+        'addressLine' => 'Jl. Sudirman No. 1',
+    ], seedTestRegion(), ['postalCode' => '10220']) as $key => $value) {
         $component->set($key, $value);
     }
     $component->call('placeOrder');
@@ -151,8 +151,8 @@ it('redirects checkout to the xendit hosted invoice url', function () {
     $component = Livewire::test(Checkout::class);
     foreach (array_merge([
         'name' => 'Budi Santoso', 'email' => 'redirect@example.com', 'phone' => '08123456789',
-        'addressLine' => 'Jl. Sudirman No. 1', 'postalCode' => '10220',
-    ], seedTestRegion()) as $key => $value) {
+        'addressLine' => 'Jl. Sudirman No. 1',
+    ], seedTestRegion(), ['postalCode' => '10220']) as $key => $value) {
         $component->set($key, $value);
     }
     $component->call('placeOrder')->assertRedirect('https://checkout.xendit.co/web/inv_redirect_test');
@@ -181,8 +181,8 @@ it('surfaces a failed xendit invoice creation as a checkout error, not a crash',
     $component = Livewire::test(Checkout::class);
     foreach (array_merge([
         'name' => 'Budi Santoso', 'email' => 'fail@example.com', 'phone' => '08123456789',
-        'addressLine' => 'Jl. Sudirman No. 1', 'postalCode' => '10220',
-    ], seedTestRegion()) as $key => $value) {
+        'addressLine' => 'Jl. Sudirman No. 1',
+    ], seedTestRegion(), ['postalCode' => '10220']) as $key => $value) {
         $component->set($key, $value);
     }
     $component->call('placeOrder');

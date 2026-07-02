@@ -70,6 +70,12 @@ class Checkout extends Component
         $this->couponMessage = null;
     }
 
+    /** A district change invalidates any postal code picked for the old one. */
+    public function updatedDistrictCode(): void
+    {
+        $this->postalCode = '';
+    }
+
     public function placeOrder(CartManager $cart, CheckoutService $checkout, ShipmentService $shipments): void
     {
         $this->errorMessage = null;

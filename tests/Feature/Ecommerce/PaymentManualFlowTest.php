@@ -50,8 +50,8 @@ function manualFlowOrder(): Order
     $component = Livewire::test(Checkout::class);
     foreach (array_merge([
         'name' => 'Budi Santoso', 'email' => 'budi@example.com', 'phone' => '08123456789',
-        'addressLine' => 'Jl. Sudirman No. 1', 'postalCode' => '10220',
-    ], seedTestRegion()) as $key => $value) {
+        'addressLine' => 'Jl. Sudirman No. 1',
+    ], seedTestRegion(), ['postalCode' => '10220']) as $key => $value) {
         $component->set($key, $value);
     }
     $component->call('placeOrder');

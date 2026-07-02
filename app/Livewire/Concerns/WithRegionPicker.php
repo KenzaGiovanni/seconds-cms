@@ -3,6 +3,7 @@
 namespace App\Livewire\Concerns;
 
 use App\Models\Region\District;
+use App\Models\Region\PostalCode;
 use App\Models\Region\Province;
 use App\Models\Region\Regency;
 use Illuminate\Support\Collection;
@@ -67,6 +68,24 @@ trait WithRegionPicker
     public function selectedDistrict(): ?District
     {
         return $this->districtCode ? District::find($this->districtCode) : null;
+    }
+
+    /**
+     * Real postal codes for the selected district (see
+     * `regions:import-postal-codes` - matched from a separate dataset, ~91%
+     * coverage nationally). Empty when the district has no matched postal
+     * data - the host should fall back to a free-text postal code input in
+     * that case, not block the form.
+     *
+     * @return Collection<int, PostalCode>
+     */
+    public function postalCodeOptions(): Collection
+    {
+        if (! $this->districtCode) {
+            return collect();
+        }
+
+        return PostalCode::where('district_code', $this->districtCode)->orderBy('urban')->get();
     }
 
     /** Human-readable snapshot for shipping_address / settings - resolved once, not re-queried per render. */

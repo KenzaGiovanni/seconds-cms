@@ -40,8 +40,9 @@ function checkoutFormData(): array
         'email' => 'budi@example.com',
         'phone' => '08123456789',
         'addressLine' => 'Jl. Sudirman No. 1',
-        'postalCode' => '10220',
-    ], seedTestRegion());
+    ], seedTestRegion(), [
+        'postalCode' => '10220', // must be set AFTER districtCode - selecting a district clears postalCode
+    ]);
 }
 
 it('returns 404 for /checkout when ecommerce is off', function () {
