@@ -13,3 +13,6 @@ Schedule::command('payments:expire')->everyMinute()->withoutOverlapping();
 
 // Safety net for missed Xendit webhooks - re-check stale pending payments.
 Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping();
+
+// Safety net for missed KiriminAja tracking webhooks - re-check stale shipments.
+Schedule::command('delivery:reconcile')->everyFiveMinutes()->withoutOverlapping();

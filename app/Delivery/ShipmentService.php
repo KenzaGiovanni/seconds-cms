@@ -33,8 +33,7 @@ class ShipmentService
     {
         return match ($provider ?? $this->provider()) {
             ShippingProvider::Manual => app(ManualDeliveryProvider::class),
-            // KiriminAjaProvider is wired in Phase 4.1/4.2 - until then it is inert.
-            ShippingProvider::Kiriminaja => throw new \RuntimeException('KiriminAja delivery is not activated yet.'),
+            ShippingProvider::Kiriminaja => app(KiriminAjaProvider::class),
         };
     }
 
@@ -47,8 +46,24 @@ class ShipmentService
      */
     public function rates(Order $order): array
     {
-        $destination = $this->destinationFor($order);
-        $parcel = DeliverySettings::defaultParcel((int) $order->subtotal);
+        return $this->ratesFor($this->destinationFor($order), (int) $order->subtotal);
+    }
+
+    /**
+     * Rate options for a destination address before an order exists (checkout,
+     * ahead of place-order). Same graceful degradation as rates(Order).
+     *
+     * @return list<RateQuote>
+     */
+    public function previewRates(Address $destination, int $itemValue = 0): array
+    {
+        return $this->ratesFor($destination, $itemValue);
+    }
+
+    /** @return list<RateQuote> */
+    private function ratesFor(Address $destination, int $itemValue): array
+    {
+        $parcel = DeliverySettings::defaultParcel($itemValue);
 
         try {
             $rates = $this->driver()->rates(DeliverySettings::origin(), $destination, $parcel);
@@ -233,7 +248,7 @@ class ShipmentService
         return new Address(
             name: $order->customer_name ?? (string) ($addr['name'] ?? ''),
             phone: $order->phone ?? (string) ($addr['phone'] ?? ''),
-            address: (string) ($addr['address'] ?? ''),
+            address: (string) ($addr['address_line'] ?? ($addr['address'] ?? '')),
             subdistrictId: isset($addr['subdistrict_id']) ? (int) $addr['subdistrict_id'] : null,
             city: (string) ($addr['city'] ?? ''),
             postalCode: (string) ($addr['postal_code'] ?? ($addr['postal'] ?? '')),

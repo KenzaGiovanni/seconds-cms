@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Shop;
 
+use App\Delivery\Address as ShippingAddress;
+use App\Delivery\ShipmentService;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentProvider;
 use App\Support\CartManager;
@@ -29,6 +31,8 @@ class Checkout extends Component
     public string $postalCode = '';
 
     public string $notes = '';
+
+    public ?string $deliveryChoice = null;
 
     public ?string $errorMessage = null;
 
@@ -65,7 +69,7 @@ class Checkout extends Component
         $this->couponMessage = null;
     }
 
-    public function placeOrder(CartManager $cart, CheckoutService $checkout): void
+    public function placeOrder(CartManager $cart, CheckoutService $checkout, ShipmentService $shipments): void
     {
         $this->errorMessage = null;
 
@@ -85,6 +89,9 @@ class Checkout extends Component
             return;
         }
 
+        $rates = $shipments->previewRates($this->destinationAddress(), (int) $cart->totals()['subtotal']);
+        $chosen = collect($rates)->first(fn ($rate) => $rate->id() === $this->deliveryChoice) ?? ($rates[0] ?? null);
+
         try {
             $order = $checkout->placeOrder(
                 [
@@ -98,6 +105,7 @@ class Checkout extends Component
                     'postal_code' => $data['postalCode'],
                 ],
                 $data['notes'] ?: null,
+                $chosen,
             );
         } catch (\RuntimeException $e) {
             $this->errorMessage = $e->getMessage();
@@ -122,12 +130,32 @@ class Checkout extends Component
         $this->redirect(route('order.confirmation', $order->number), navigate: true);
     }
 
-    public function render(CartManager $cart)
+    /** Build the destination Address from whatever the customer has entered so far. */
+    private function destinationAddress(): ShippingAddress
+    {
+        return new ShippingAddress(
+            name: $this->name,
+            phone: $this->phone,
+            address: $this->addressLine,
+            city: $this->city ?: null,
+            postalCode: $this->postalCode ?: null,
+        );
+    }
+
+    public function render(CartManager $cart, ShipmentService $shipments)
     {
         $provider = PaymentSettings::provider();
+        $totals = $cart->totals();
+
+        $rates = $shipments->previewRates($this->destinationAddress(), (int) $totals['subtotal']);
+
+        if ($this->deliveryChoice === null || ! collect($rates)->contains(fn ($rate) => $rate->id() === $this->deliveryChoice)) {
+            $this->deliveryChoice = $rates[0]->id() ?? null;
+        }
 
         return view('livewire.shop.checkout', [
-            'totals' => $cart->totals(),
+            'totals' => $totals,
+            'rates' => $rates,
             'paymentProvider' => $provider,
             'paymentMethods' => $provider === PaymentProvider::Xendit
                 ? PaymentSettings::xenditEnabledMethods()

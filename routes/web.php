@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\FrontController;
+use App\Http\Controllers\KiriminAjaWebhookController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\ThemeAssetController;
 use App\Http\Controllers\XenditWebhookController;
@@ -19,6 +20,7 @@ use App\Livewire\Media\MediaLibrary;
 use App\Livewire\Menus\MenuBuilder;
 use App\Livewire\Menus\MenuList;
 use App\Livewire\Settings\WebsiteSettings;
+use App\Livewire\Shop\DeliverySettingsForm;
 use App\Livewire\Shop\OrderDetail;
 use App\Livewire\Shop\OrderList;
 use App\Livewire\Shop\PaymentSettingsForm;
@@ -48,6 +50,9 @@ Route::get('/themes/{slug}/assets/{path}', [ThemeAssetController::class, 'show']
 
 // Xendit invoice webhook - public, CSRF-exempt (see bootstrap/app.php), verified via x-callback-token.
 Route::post('/webhooks/xendit', [XenditWebhookController::class, 'handle'])->name('webhooks.xendit');
+
+// KiriminAja tracking webhook - public, CSRF-exempt, verified via X-Kiriminaja-Token.
+Route::post('/webhooks/kiriminaja', [KiriminAjaWebhookController::class, 'handle'])->name('webhooks.kiriminaja');
 
 // Front-end: home + blog routes (MUST come before the page catch-all).
 Route::get('/', [FrontController::class, 'home'])->name('home');
@@ -202,6 +207,11 @@ Route::middleware(['auth', 'staff'])->prefix('admin')->group(function () {
             Route::get('/', PaymentVerificationList::class)->name('index');
             Route::get('/settings', PaymentSettingsForm::class)->name('settings');
             Route::get('/{payment}/proof', [PaymentProofController::class, 'show'])->name('proof');
+        });
+
+        // Delivery — provider settings (Phase 4.4).
+        Route::prefix('delivery')->name('delivery.')->group(function () {
+            Route::get('/settings', DeliverySettingsForm::class)->name('settings');
         });
     });
 });

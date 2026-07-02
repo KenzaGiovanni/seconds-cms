@@ -45,27 +45,22 @@
                 <textarea wire:model="notes" rows="3"></textarea>
             </div>
 
-            {{-- Delivery method (UI only - wired in Phase 4, KiriminAja live rates) --}}
+            {{-- Delivery method: live options from ShipmentService (Phase 4.1) --}}
             <h2 class="checkout-heading">Delivery method</h2>
             <div class="checkout-options" aria-label="Delivery method">
-                <label class="checkout-option checkout-option--selected">
-                    <input type="radio" name="delivery" checked disabled>
-                    <span class="checkout-option-body">
-                        <span class="checkout-option-title">Standard delivery</span>
-                        <span class="checkout-option-sub">Live courier rates appear here once delivery is connected</span>
-                    </span>
-                    <span class="checkout-option-price">-</span>
-                </label>
-                <label class="checkout-option checkout-option--disabled">
-                    <input type="radio" name="delivery" disabled>
-                    <span class="checkout-option-body">
-                        <span class="checkout-option-title">Instant / same-day</span>
-                        <span class="checkout-option-sub">Coming soon</span>
-                    </span>
-                    <span class="checkout-option-price">-</span>
-                </label>
+                @foreach ($rates as $rate)
+                    <label @class(['checkout-option', 'checkout-option--selected' => $deliveryChoice === $rate->id()])>
+                        <input type="radio" name="delivery" value="{{ $rate->id() }}" wire:model="deliveryChoice">
+                        <span class="checkout-option-body">
+                            <span class="checkout-option-title">{{ $rate->serviceName }}</span>
+                            @if ($rate->etaText)
+                                <span class="checkout-option-sub">{{ $rate->etaText }}</span>
+                            @endif
+                        </span>
+                        <span class="checkout-option-price">{{ $rate->formattedCost() }}</span>
+                    </label>
+                @endforeach
             </div>
-            <p class="checkout-note">Courier options and live rates are added in the delivery module - shown here for layout only.</p>
 
             {{-- Payment method: reflects the active provider + its enabled methods (Phase 3.4) --}}
             <h2 class="checkout-heading">Payment method</h2>
@@ -110,9 +105,14 @@
                     <span>- {{ $totals['discountFormatted'] }}</span>
                 </div>
             @endif
+            @php($chosenRate = collect($rates)->first(fn ($rate) => $rate->id() === $deliveryChoice))
+            <div class="checkout-summary-row">
+                <span>Shipping</span>
+                <span>{{ $chosenRate?->formattedCost() ?? '-' }}</span>
+            </div>
             <div class="checkout-summary-row checkout-summary-row--total">
                 <span>Total</span>
-                <span>{{ $totals['totalFormatted'] }}</span>
+                <span>{{ \App\Support\Money::format($totals['total'] + ($chosenRate?->cost ?? 0), $totals['currency']) }}</span>
             </div>
 
             {{-- Coupon --}}
@@ -133,7 +133,7 @@
                 @endif
             </div>
 
-            <p class="checkout-note">Shipping is arranged after checkout. Bank transfer details and a proof-of-payment upload appear on your order confirmation page.</p>
+            <p class="checkout-note">Bank transfer details and a proof-of-payment upload appear on your order confirmation page.</p>
             <button type="submit" class="btn-add-to-cart">Place order</button>
         </div>
     </form>

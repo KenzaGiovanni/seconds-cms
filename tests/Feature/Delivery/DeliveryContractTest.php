@@ -1,5 +1,6 @@
 <?php
 
+use App\Delivery\KiriminAjaProvider;
 use App\Delivery\ManualDeliveryProvider;
 use App\Delivery\RateChoice;
 use App\Delivery\ShipmentService;
@@ -182,9 +183,9 @@ it('manual delivery provider has no webhook', function () {
     (new ManualDeliveryProvider)->handleWebhook(request());
 })->throws(LogicException::class);
 
-it('kiriminaja driver is inert until activated', function () {
+it('resolves the kiriminaja driver once activated', function () {
     Setting::set('delivery_provider', ShippingProvider::Kiriminaja->value);
     Setting::flushCache();
 
-    (new ShipmentService)->driver();
-})->throws(RuntimeException::class);
+    expect((new ShipmentService)->driver())->toBeInstanceOf(KiriminAjaProvider::class);
+});

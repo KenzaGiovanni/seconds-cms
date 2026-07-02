@@ -12,11 +12,14 @@ use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Theme;
 use App\Models\User;
+use App\Payments\ManualGateway;
+use App\Payments\PaymentService;
 use App\Support\CartManager;
 use App\Support\PaymentSettings;
 use App\Support\ThemeManager;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -50,7 +53,7 @@ function fakeXenditInvoice(int $status = 200, array $overrides = []): void
     Http::fake([
         '*/balance' => Http::response(['balance' => 1000000], 200),
         '*/v2/invoices' => Http::response(array_merge([
-            'id' => 'inv_'.\Illuminate\Support\Str::random(10),
+            'id' => 'inv_'.Str::random(10),
             'invoice_url' => 'https://checkout.xendit.co/web/inv_test123',
             'status' => 'PENDING',
         ], $overrides), (int) $status),
@@ -160,8 +163,8 @@ it('manual bank transfer stays selectable as a fallback once xendit is active', 
     PaymentSettings::setXenditKeys('sk_test', 'pk_test', 'wh_test');
     PaymentSettings::setProvider(PaymentProvider::Xendit);
 
-    expect(app(\App\Payments\PaymentService::class)->gateway(PaymentProvider::Manual))
-        ->toBeInstanceOf(\App\Payments\ManualGateway::class);
+    expect(app(PaymentService::class)->gateway(PaymentProvider::Manual))
+        ->toBeInstanceOf(ManualGateway::class);
 });
 
 it('surfaces a failed xendit invoice creation as a checkout error, not a crash', function () {

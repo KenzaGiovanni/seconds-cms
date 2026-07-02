@@ -22,10 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'ecommerce' => EnsureEcommerceEnabled::class,
         ]);
 
-        // Xendit posts webhooks without a CSRF token; verified instead via
-        // the x-callback-token header (XenditWebhookController).
+        // Xendit/KiriminAja post webhooks without a CSRF token; verified
+        // instead via a shared-secret token header (Xendit/KiriminAjaWebhookController).
         $middleware->validateCsrfTokens(except: [
             'webhooks/xendit',
+            'webhooks/kiriminaja',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

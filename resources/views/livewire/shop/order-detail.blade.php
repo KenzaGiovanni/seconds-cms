@@ -146,6 +146,80 @@
                 </div>
             @endif
 
+            {{-- Delivery / shipments --}}
+            <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-4">
+                <h2 class="font-display text-sm font-semibold text-ink">Delivery</h2>
+
+                @if ($order->shipping_courier)
+                    <div class="text-xs text-muted">
+                        Chosen at checkout: {{ $order->shipping_service_name ?? $order->shipping_courier }}
+                        &middot; {{ \App\Support\Money::format($order->shipping_total, $order->currency) }}
+                    </div>
+                @endif
+
+                @if ($order->shipments->isEmpty())
+                    @if ($order->shipping_courier && in_array($order->status->value, ['paid', 'fulfilled']))
+                        <button type="button" wire:click="bookShipment"
+                                class="w-full rounded-[var(--radius-btn)] border border-line px-3 py-2 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                            Book shipment
+                        </button>
+                    @else
+                        <p class="text-xs text-muted">No shipment booked yet.</p>
+                    @endif
+
+                    {{-- Manual-shipment fallback: enter courier + tracking by hand (spec §4.4) --}}
+                    <details class="pt-2">
+                        <summary class="cursor-pointer font-display text-xs font-medium text-muted">Add manual shipment instead</summary>
+                        <form wire:submit="addManualShipment" class="mt-2 space-y-2">
+                            <input type="text" wire:model="manualCourier" placeholder="Courier (e.g. JNE)"
+                                   class="w-full rounded-[var(--radius-btn)] border border-line bg-bg px-2 py-1.5 text-xs text-ink">
+                            @error('manualCourier') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                            <input type="text" wire:model="manualServiceName" placeholder="Service (e.g. JNE Reguler)"
+                                   class="w-full rounded-[var(--radius-btn)] border border-line bg-bg px-2 py-1.5 text-xs text-ink">
+                            <input type="text" wire:model="manualTrackingNumber" placeholder="Tracking number"
+                                   class="w-full rounded-[var(--radius-btn)] border border-line bg-bg px-2 py-1.5 text-xs text-ink">
+                            <input type="number" wire:model="manualCost" placeholder="Cost" min="0"
+                                   class="w-full rounded-[var(--radius-btn)] border border-line bg-bg px-2 py-1.5 text-xs text-ink">
+                            @error('manualCost') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                            <button type="submit" class="w-full rounded-[var(--radius-btn)] border border-line px-3 py-1.5 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                                Add manual shipment
+                            </button>
+                        </form>
+                    </details>
+                @else
+                    @foreach ($order->shipments->sortByDesc('id') as $shipment)
+                        <div wire:key="shipment-{{ $shipment->id }}" class="space-y-1.5 border-b border-line pb-3 text-sm last:border-0 last:pb-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    <span class="text-ink">{{ strtoupper($shipment->courier ?? '-') }}</span>
+                                    <span class="text-muted">- {{ $shipment->status->label() }}</span>
+                                </div>
+                                <div class="flex shrink-0 gap-2">
+                                    @if ($shipment->provider->value === 'kiriminaja' && ! $shipment->status->isTerminal())
+                                        <button type="button" wire:click="recheckShipment({{ $shipment->id }})"
+                                                class="rounded-[var(--radius-btn)] border border-line px-2 py-1 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                                            Re-check
+                                        </button>
+                                    @endif
+                                    @if ($shipment->provider->value === 'manual')
+                                        @foreach ($shipment->status->transitions() as $next)
+                                            <button type="button" wire:click="advanceShipment({{ $shipment->id }}, '{{ $next->value }}')"
+                                                    class="rounded-[var(--radius-btn)] border border-line px-2 py-1 font-display text-xs font-medium text-ink transition hover:bg-soft">
+                                                Mark {{ $next->label() }}
+                                            </button>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                            @if ($shipment->tracking_number)
+                                <div class="text-xs text-muted">Tracking: {{ $shipment->tracking_number }}</div>
+                            @endif
+                            <div class="text-xs text-muted">{{ $shipment->formattedCost() }} &middot; booked {{ $shipment->booked_at?->format('d M Y, H:i') }}</div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
             {{-- Customer --}}
             <div class="rounded-[var(--radius-btn)] border border-line bg-bg p-4 space-y-2">
                 <h2 class="font-display text-sm font-semibold text-ink">Customer</h2>

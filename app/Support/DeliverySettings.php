@@ -85,4 +85,35 @@ class DeliverySettings
         Setting::set('kiriminaja_mode', $mode);
         Setting::set('kiriminaja_webhook_token', $webhookToken);
     }
+
+    public static function maskedKiriminajaApiKey(): ?string
+    {
+        $key = self::kiriminajaKeys()['api_key'];
+
+        return $key === '' ? null : str_repeat('•', 8).substr($key, -4);
+    }
+
+    /** Courier codes to filter rate quotes to (empty = all couriers KiriminAja offers). */
+    public static function enabledCouriers(): array
+    {
+        $raw = (string) Setting::get('kiriminaja_enabled_couriers', '');
+
+        return $raw === '' ? [] : array_values(array_filter(array_map('trim', explode(',', $raw))));
+    }
+
+    /** @param  list<string>  $couriers */
+    public static function setEnabledCouriers(array $couriers): void
+    {
+        Setting::set('kiriminaja_enabled_couriers', implode(',', $couriers));
+    }
+
+    public static function setOrigin(Address $origin): void
+    {
+        Setting::set('delivery_origin_name', $origin->name);
+        Setting::set('delivery_origin_phone', $origin->phone);
+        Setting::set('delivery_origin_address', $origin->address);
+        Setting::set('delivery_origin_subdistrict_id', (string) ($origin->subdistrictId ?? ''));
+        Setting::set('delivery_origin_city', (string) $origin->city);
+        Setting::set('delivery_origin_postal', (string) $origin->postalCode);
+    }
 }

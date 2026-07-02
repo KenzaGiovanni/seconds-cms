@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Delivery\RateQuote;
 use App\Enums\OrderStatus;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -29,7 +30,7 @@ class CheckoutService
      * @param  array{name: string, email: string, phone?: string}  $customer
      * @param  array<string, mixed>  $shippingAddress
      */
-    public function placeOrder(array $customer, array $shippingAddress, ?string $notes = null): Order
+    public function placeOrder(array $customer, array $shippingAddress, ?string $notes = null, ?RateQuote $shipping = null): Order
     {
         $cart = $this->cartManager->current()->fresh(['items.product', 'items.variant']);
 
@@ -39,7 +40,7 @@ class CheckoutService
 
         $couponCode = $this->cartManager->couponCode();
 
-        return DB::transaction(function () use ($cart, $customer, $shippingAddress, $notes, $couponCode) {
+        return DB::transaction(function () use ($cart, $customer, $shippingAddress, $notes, $couponCode, $shipping) {
             $order = Order::create([
                 'status' => OrderStatus::Pending,
                 'user_id' => Auth::id(),
@@ -51,6 +52,10 @@ class CheckoutService
                 'currency' => Money::DEFAULT_CURRENCY,
                 'notes' => $notes,
                 'placed_at' => now(),
+                'shipping_total' => $shipping?->cost ?? 0,
+                'shipping_courier' => $shipping?->courier,
+                'shipping_service_code' => $shipping?->serviceCode,
+                'shipping_service_name' => $shipping?->serviceName,
             ]);
 
             foreach ($cart->items as $item) {

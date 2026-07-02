@@ -84,6 +84,30 @@ it('places an order from the cart as a guest', function () {
         ->and($order->total)->toBe(90000);
 });
 
+it('snapshots the chosen delivery rate onto the order total (Phase 4.1)', function () {
+    Setting::set('delivery_flat_rate', 12000);
+    Setting::flushCache();
+
+    $product = Product::create([
+        'name' => 'Mug', 'slug' => 'mug', 'type' => 'simple',
+        'status' => 'published', 'price' => 45000, 'stock_policy' => 'deny', 'stock' => 10,
+    ]);
+    app(CartManager::class)->addItem($product, 1);
+
+    $component = Livewire::test(Checkout::class);
+    foreach (checkoutFormData() as $key => $value) {
+        $component->set($key, $value);
+    }
+    $component->call('placeOrder');
+
+    $order = Order::where('email', 'budi@example.com')->first();
+
+    expect($order->shipping_total)->toBe(12000);
+    expect($order->shipping_courier)->toBe('manual');
+    expect($order->shipping_service_code)->toBe('flat');
+    expect($order->total)->toBe(45000 + 12000);
+});
+
 it('snapshots product name/price on the order item even if the product changes later', function () {
     $product = Product::create([
         'name' => 'Original Name', 'slug' => 'orig', 'type' => 'simple',

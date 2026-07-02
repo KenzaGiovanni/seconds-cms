@@ -116,6 +116,10 @@
                                @class([$navItem, $navActive => request()->routeIs('admin.shop.payments.*'), $navIdle => ! request()->routeIs('admin.shop.payments.*')])>
                                 Payments
                             </a>
+                            <a href="{{ route('admin.shop.delivery.settings') }}"
+                               @class([$navItem, $navActive => request()->routeIs('admin.shop.delivery.*'), $navIdle => ! request()->routeIs('admin.shop.delivery.*')])>
+                                Delivery
+                            </a>
                         @endcan
                         @can(\App\Enums\Permission::PromotionsManage->value)
                             <a href="{{ route('admin.shop.promotions.index') }}"
